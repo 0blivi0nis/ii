@@ -172,12 +172,18 @@ Item { // Bar content region
                     Layout.fillWidth: true
                 }
 
+                WeatherBar {
+                    visible: (Config.options.bar.weather.enable && root.useShortenedForm === 0)
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
                 UtilButtons {
                     visible: (Config.options.bar.verbose && root.useShortenedForm === 0)
                     Layout.alignment: Qt.AlignVCenter
                 }
 
                 BatteryIndicator {
+                    Layout.rightMargin: 4
                     visible: (root.useShortenedForm < 2 && UPower.displayDevice.isLaptopBattery)
                     Layout.alignment: Qt.AlignVCenter
                 }
@@ -264,6 +270,11 @@ Item { // Bar content region
                     property real realSpacing: 15
                     spacing: 0
 
+                    HyprlandSubmapIndicator {
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.rightMargin: indicatorsRowLayout.realSpacing
+                        color: rightSidebarButton.colText
+                    }
                     Revealer {
                         reveal: Audio.sink?.audio?.muted ?? false
                         Layout.fillHeight: true
@@ -295,30 +306,32 @@ Item { // Bar content region
                         Layout.rightMargin: indicatorsRowLayout.realSpacing
                         color: rightSidebarButton.colText
                     }
-                    Revealer {
-                        reveal: Notifications.silent || Notifications.unread > 0
-                        Layout.fillHeight: true
-                        Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
-                        implicitHeight: reveal ? notificationUnreadCount.implicitHeight : 0
-                        implicitWidth: reveal ? notificationUnreadCount.implicitWidth : 0
-                        Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                        }
-                        NotificationUnreadCount {
-                            id: notificationUnreadCount
-                        }
-                    }
                     MaterialSymbol {
                         Layout.rightMargin: indicatorsRowLayout.realSpacing
                         text: Network.materialSymbol
                         iconSize: Appearance.font.pixelSize.larger
                         color: rightSidebarButton.colText
                     }
-                    MaterialSymbol {
-                        visible: BluetoothStatus.available
-                        text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
-                        iconSize: Appearance.font.pixelSize.larger
-                        color: rightSidebarButton.colText
+                    //MaterialSymbol {
+                    //    visible: BluetoothStatus.available
+                    //    text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
+                    //    iconSize: Appearance.font.pixelSize.larger
+                    //    color: rightSidebarButton.colText
+                    //}
+                    BluetoothIndicator {
+                    }
+                    Revealer {
+                        reveal: Notifications.silent || Notifications.unread > 0
+                        Layout.fillHeight: true
+                        Layout.leftMargin: reveal ? indicatorsRowLayout.realSpacing : 0
+                        implicitHeight: reveal ? notificationUnreadCount.implicitHeight : 0
+                        implicitWidth: reveal ? notificationUnreadCount.implicitWidth : 0
+                        Behavior on Layout.leftMargin {
+                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        }
+                        NotificationUnreadCount {
+                            id: notificationUnreadCount
+                        }
                     }
                 }
             }
@@ -336,12 +349,21 @@ Item { // Bar content region
             }
 
             // Weather
+            //Loader {
+            //    Layout.leftMargin: 4
+            //    active: Config.options.bar.weather.enable
+            //    sourceComponent: BarGroup {
+            //        WeatherBar {}
+            //    }
+            //}
+
+            // PrayerTime
             Loader {
                 Layout.leftMargin: 4
-                active: Config.options.bar.weather.enable
+                active: Config.options.bar.prayerTimes.enable
 
                 sourceComponent: BarGroup {
-                    WeatherBar {}
+                    PrayerTime {}
                 }
             }
         }

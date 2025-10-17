@@ -62,15 +62,7 @@ Variants {
         // Position
         property real clockX: (modelData.width / 2)
         property real clockY: (modelData.height / 2)
-        property var textHorizontalAlignment: {
-            if ((Config.options.lock.centerClock && GlobalStates.screenLocked) || wallpaperSafetyTriggered)
-                return Text.AlignHCenter;
-            if (clockX < screen.width / 3)
-                return Text.AlignLeft;
-            if (clockX > screen.width * 2 / 3)
-                return Text.AlignRight;
-            return Text.AlignHCenter;
-        }
+        property var textHorizontalAlignment: Text.AlignHCenter
         // Colors
         property bool shouldBlur: (GlobalStates.screenLocked && Config.options.lock.blur.enable)
         property color dominantColor: Appearance.colors.colPrimary // Default, to be changed
@@ -435,7 +427,7 @@ Variants {
         Layout.fillWidth: true
         horizontalAlignment: bgRoot.textHorizontalAlignment
         font {
-            family: Appearance.font.family.expressive
+            family: Appearance.font.family.clock
             pixelSize: 20
             weight: Font.DemiBold
         }

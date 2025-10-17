@@ -97,23 +97,126 @@ Item {
                 }
             }
         }
-
-        // Device selector
-        RowLayout {
-            id: deviceSelectorRowLayout
+        // output / input
+        Rectangle {
             Layout.fillWidth: true
-            Layout.fillHeight: false
-            uniformCellSizes: true
+            Layout.preferredHeight: 100
+            radius: Appearance.rounding.large
+            color: Qt.rgba(
+                Appearance.colors.colLayer1.r,
+                Appearance.colors.colLayer1.g,
+                Appearance.colors.colLayer1.b,
+                0.3
+            )
+            RowLayout {
+                id: deviceSelectorRowLayout
+                uniformCellSizes: true
+                anchors.fill: parent
+                ColumnLayout {
+                    // Output
+                    AudioDeviceSelectorButton {
+                        Layout.fillWidth: true
+                        input: false
+                        downAction: () => root.showDeviceSelectorDialog(input)
+                    }
+                    // Slider
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        StyledSlider {
+                            Layout.fillWidth: true
+                            from: 0
+                            to: 1.0
+                            value: Pipewire.defaultAudioSink?.audio.volume ?? 0
+                            enabled: !(Pipewire.defaultAudioSink?.audio.muted ?? false)
+                            opacity: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? 0.5 : 1.0
+                            onValueChanged: {
+                                if (Pipewire.defaultAudioSink?.audio) {
+                                    Pipewire.defaultAudioSink.audio.volume = value
+                                }
+                            }
+                        }
+                        Rectangle {
+                            Layout.preferredWidth: 32
+                            Layout.preferredHeight: 32
+                            radius: 16
+                            color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? 
+                                   Appearance.m3colors.m3error : 
+                                   Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.1)
+                            border.color: Qt.rgba(1, 1, 1, 0.15)
+                            border.width: 0
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "volume_off" : "volume_up"
+                                iconSize: Appearance.font.pixelSize.small
+                                color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? 
+                                       Appearance.m3colors.m3errorContainer : 
+                                       Appearance.colors.colOnLayer1
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    if (Pipewire.defaultAudioSink?.audio) {
+                                        Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
-            AudioDeviceSelectorButton {
-                Layout.fillWidth: true
-                input: false
-                downAction: () => root.showDeviceSelectorDialog(input)
-            }
-            AudioDeviceSelectorButton {
-                Layout.fillWidth: true
-                input: true
-                downAction: () => root.showDeviceSelectorDialog(input)
+                ColumnLayout {
+                    // Input
+                    AudioDeviceSelectorButton {
+                        Layout.fillWidth: true
+                        input: true
+                        downAction: () => root.showDeviceSelectorDialog(input)
+                    }
+                    // Slider
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        StyledSlider {
+                            Layout.fillWidth: true
+                            from: 0
+                            to: 1.0
+                            value: Pipewire.defaultAudioSource?.audio?.volume ?? 0
+                            enabled: !(Pipewire.defaultAudioSource?.audio?.muted ?? false)
+                            opacity: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? 0.5 : 1.0
+                            onValueChanged: {
+                                if (Pipewire.defaultAudioSource?.audio) {
+                                    Pipewire.defaultAudioSource.audio.volume = value
+                                }
+                            }
+                        }
+                        Rectangle {
+                            Layout.preferredWidth: 32
+                            Layout.preferredHeight: 32
+                            radius: 16
+                            color: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? 
+                                   Appearance.m3colors.m3error : 
+                                   Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.1)
+                            border.color: Qt.rgba(1, 1, 1, 0.15)
+                            border.width: 0
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? "mic_off" : "mic"
+                                iconSize: Appearance.font.pixelSize.small
+                                color: (Pipewire.defaultAudioSource?.audio?.muted ?? false) ? 
+                                       Appearance.m3colors.m3errorContainer : 
+                                       Appearance.colors.colOnLayer1
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    if (Pipewire.defaultAudioSource?.audio) {
+                                        Pipewire.defaultAudioSource.audio.muted = !Pipewire.defaultAudioSource.audio.muted
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

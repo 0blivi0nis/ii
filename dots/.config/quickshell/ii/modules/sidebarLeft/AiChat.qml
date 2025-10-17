@@ -440,7 +440,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 + commandButtonsRow.implicitHeight + commandButtonsRow.anchors.bottomMargin + spacing, 45)
                 + (attachedFileIndicator.implicitHeight + spacing + attachedFileIndicator.anchors.topMargin)
             clip: true
-            border.color: Appearance.colors.colOutlineVariant
+            border.color: Appearance.m3colors.m3onPrimary
             border.width: 1
 
             Behavior on implicitHeight {

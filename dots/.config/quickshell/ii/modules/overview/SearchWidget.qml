@@ -203,7 +203,7 @@ Item { // Wrapper
         radius: Appearance.rounding.large
         color: Appearance.colors.colLayer0
         border.width: 1
-        border.color: Appearance.colors.colLayer0Border
+        border.color: Appearance.m3colors.m3onPrimary
 
         ColumnLayout {
             id: columnLayout

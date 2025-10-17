@@ -19,7 +19,7 @@ Rectangle {
     implicitHeight: Math.max(150, inputColumn.implicitHeight)
     color: isInput ? Appearance.colors.colLayer1 : Appearance.colors.colSurfaceContainer
     radius: Appearance.rounding.normal
-    border.color: isInput ? Appearance.colors.colOutlineVariant : "transparent"
+    border.color: isInput ? Appearance.m3colors.m3onPrimary : "transparent"
     border.width: isInput ? 1 : 0
 
     signal inputTextChanged(); // Signal emitted when text changes

@@ -88,8 +88,8 @@ Scope { // Scope
                             anchors.topMargin: Appearance.sizes.elevationMargin
                             anchors.bottomMargin: Appearance.sizes.hyprlandGapsOut
                             color: Appearance.colors.colLayer0
-                            border.width: 1
-                            border.color: Appearance.colors.colLayer0Border
+                            border.width: 0
+                            border.color: Appearance.m3colors.m3onPrimary
                             radius: Appearance.rounding.large
                         }
 
@@ -128,7 +128,7 @@ Scope { // Scope
                             DockSeparator {}
                             DockButton {
                                 Layout.fillHeight: true
-                                onClicked: GlobalStates.overviewOpen = !GlobalStates.overviewOpen
+                                onClicked: Quickshell.execDetached(["rofi", "-show", "drun", "-theme","~/.config/rofi/full.rasi"]);
                                 topInset: Appearance.sizes.hyprlandGapsOut + dockRow.padding
                                 bottomInset: Appearance.sizes.hyprlandGapsOut + dockRow.padding
                                 contentItem: MaterialSymbol {

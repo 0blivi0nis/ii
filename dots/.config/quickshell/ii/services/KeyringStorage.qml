@@ -18,7 +18,7 @@ Singleton {
     property var keyringData: ({})
     
     property var properties: {
-        "application": "illogical-impulse",
+        "application": "Quickshell",
         "explanation": Translation.tr("For storing API keys and other sensitive information"),
     }
     property var propertiesAsArgs: Object.keys(root.properties).reduce(
@@ -26,7 +26,7 @@ Singleton {
             return arr.concat([key, root.properties[key]]);
         }, []
     )
-    property string keyringLabel: Translation.tr("%1 Safe Storage").arg("illogical-impulse")
+    property string keyringLabel: Translation.tr("%1 Safe Storage").arg("Quickshell")
 
     function setNestedField(path, value) {
         if (!root.keyringData) root.keyringData = {};
@@ -89,7 +89,7 @@ Singleton {
     Process {
         id: getData
         command: [ // We need to use echo for a newline so splitparser does parse
-            "bash", "-c", `echo $(secret-tool lookup 'application' 'illogical-impulse')`,
+            "bash", "-c", `echo $(secret-tool lookup 'application' 'Quickshell')`,
         ]
         stdout: SplitParser {
             onRead: data => {

@@ -23,7 +23,7 @@ ApplicationWindow {
     property bool showNextTime: false
     property var pages: [
         {
-            name: Translation.tr("Quick"),
+            name: Translation.tr("Shell"),
             icon: "instant_mix",
             component: "modules/settings/QuickConfig.qml"
         },
@@ -173,11 +173,11 @@ ApplicationWindow {
                         buttonText: Translation.tr("Config file")
                         expanded: navRail.expanded
                         downAction: () => {
-                            Qt.openUrlExternally(`${Directories.config}/illogical-impulse/config.json`);
+                            Qt.openUrlExternally(`${Directories.config}/quickshell/ii.json`);
                         }
 
                         StyledToolTip {
-                            text: Translation.tr("Open the shell config file.\nIf the button doesn't work or doesn't open in your favorite editor,\nyou can manually open ~/.config/illogical-impulse/config.json")
+                            text: Translation.tr("Open the shell config file.\nIf the button doesn't work or doesn't open in your favorite editor,\nyou can manually open ~/.config/quickshell/ii.json")
                         }
                     }
 

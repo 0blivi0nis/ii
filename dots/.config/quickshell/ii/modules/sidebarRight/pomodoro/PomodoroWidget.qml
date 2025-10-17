@@ -115,13 +115,6 @@ Item {
             }
         }
 
-        Rectangle { // Tabbar bottom border
-            id: tabBarBottomBorder
-            Layout.fillWidth: true
-            height: 1
-            color: Appearance.colors.colOutlineVariant
-        }
-
         SwipeView {
             id: swipeView
             Layout.topMargin: 10

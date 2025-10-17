@@ -112,6 +112,20 @@ ContentPage {
                 }
             }
         }
+        ConfigRow {
+            uniform: true
+            ConfigSpinBox {
+                icon: "charger"
+                text: Translation.tr("Full warning")
+                value: Config.options.battery.full
+                from: 0
+                to: 100
+                stepSize: 5
+                onValueChanged: {
+                    Config.options.battery.full = value;
+                }
+            }
+        }
     }
     
     ContentSection {
@@ -234,6 +248,49 @@ ContentPage {
                             value: 2
                         }
                     ]
+                }
+            }
+        }
+    }
+
+    ContentSection {
+        icon: "notification_sound"
+        title: Translation.tr("Sounds")
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "battery_android_full"
+                text: Translation.tr("Battery")
+                checked: Config.options.sounds.battery
+                onCheckedChanged: {
+                    Config.options.sounds.battery = checked;
+                }
+            }
+            ConfigSwitch {
+                buttonIcon: "av_timer"
+                text: Translation.tr("Pomodoro")
+                checked: Config.options.sounds.pomodoro
+                onCheckedChanged: {
+                    Config.options.sounds.pomodoro = checked;
+                }
+            }
+        }
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "notification_sound"
+                text: Translation.tr("Notifications")
+                checked: Config.options.sounds.notification
+                onCheckedChanged: {
+                    Config.options.sounds.notification = checked;
+                }
+            }
+            ConfigSwitch {
+                buttonIcon: "mosque"
+                text: Translation.tr("Adhan")
+                checked: Config.options.sounds.adhan
+                onCheckedChanged: {
+                    Config.options.sounds.adhan = checked;
                 }
             }
         }

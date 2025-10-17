@@ -174,6 +174,9 @@ Singleton {
                 }
                 root.unread++;
             }
+            if (Config.options.sounds.notification) {
+                Audio.playSystemSound("message-new-instant")
+            }
             root.notify(newNotifObject);
             // console.log(notifToString(newNotifObject));
             notifFileView.setText(stringifyList(root.list));

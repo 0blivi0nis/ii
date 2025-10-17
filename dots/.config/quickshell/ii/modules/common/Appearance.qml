@@ -172,8 +172,8 @@ Singleton {
         property color colSurfaceContainerHighestActive: ColorUtils.mix(m3colors.m3surfaceContainerHighest, m3colors.m3onSurface, 0.85)
         property color colOnSurface: m3colors.m3onSurface
         property color colOnSurfaceVariant: m3colors.m3onSurfaceVariant
-        property color colTooltip: m3colors.m3inverseSurface
-        property color colOnTooltip: m3colors.m3inverseOnSurface
+        property color colTooltip: m3colors.m3onPrimary
+        property color colOnTooltip: m3colors.m3primary
         property color colScrim: ColorUtils.transparentize(m3colors.m3scrim, 0.5)
         property color colShadow: ColorUtils.transparentize(m3colors.m3shadow, 0.7)
         property color colOutline: m3colors.m3outline
@@ -210,6 +210,7 @@ Singleton {
             property string monospace: "JetBrains Mono NF"
             property string reading: "Readex Pro"
             property string expressive: "Space Grotesk"
+            property string clock: "PP Neue Machina"
         }
         property QtObject pixelSize: QtObject {
             property int smallest: 10

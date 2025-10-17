@@ -60,8 +60,8 @@ Item {
         implicitHeight: workspaceColumnLayout.implicitHeight + padding * 2
         radius: Appearance.rounding.screenRounding * root.scale + padding
         color: Appearance.colors.colLayer0
-        border.width: 1
-        border.color: Appearance.colors.colLayer0Border
+        border.width: 0
+        border.color: Appearance.m3colors.m3onPrimary
 
         Column { // Workspaces
             id: workspaceColumnLayout

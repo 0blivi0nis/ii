@@ -72,7 +72,7 @@ PopupWindow {
             color: Appearance.colors.colLayer0
             radius: Appearance.rounding.windowRounding
             border.width: 1
-            border.color: Appearance.colors.colLayer0Border
+            border.color: Appearance.m3colors.m3onPrimary
             clip: true
 
             opacity: 0

@@ -25,11 +25,11 @@ Singleton {
     property string favicons: FileUtils.trimFileProtocol(`${Directories.cache}/media/favicons`)
     property string coverArt: FileUtils.trimFileProtocol(`${Directories.cache}/media/coverart`)
     property string booruPreviews: FileUtils.trimFileProtocol(`${Directories.cache}/media/boorus`)
-    property string booruDownloads: FileUtils.trimFileProtocol(Directories.pictures  + "/homework")
-    property string booruDownloadsNsfw: FileUtils.trimFileProtocol(Directories.pictures + "/homework/🌶️")
+    property string booruDownloads: FileUtils.trimFileProtocol(`${Directories.cache}/media/boorus/homework`)
+    property string booruDownloadsNsfw: FileUtils.trimFileProtocol(`${Directories.cache}/media/boorus/homework/🌶️`)
     property string latexOutput: FileUtils.trimFileProtocol(`${Directories.cache}/media/latex`)
-    property string shellConfig: FileUtils.trimFileProtocol(`${Directories.config}/illogical-impulse`)
-    property string shellConfigName: "config.json"
+    property string shellConfig: FileUtils.trimFileProtocol(`${Directories.config}/quickshell`)
+    property string shellConfigName: "ii.json"
     property string shellConfigPath: `${Directories.shellConfig}/${Directories.shellConfigName}`
     property string todoPath: FileUtils.trimFileProtocol(`${Directories.state}/user/todo.json`)
     property string notificationsPath: FileUtils.trimFileProtocol(`${Directories.cache}/notifications/notifications.json`)

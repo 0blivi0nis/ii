@@ -315,7 +315,7 @@ Item {
             implicitHeight: Math.max(inputFieldRowLayout.implicitHeight + inputFieldRowLayout.anchors.topMargin 
                 + commandButtonsRow.implicitHeight + commandButtonsRow.anchors.bottomMargin + columnSpacing, 45)
             clip: true
-            border.color: Appearance.colors.colOutlineVariant
+            border.color: Appearance.m3colors.m3onPrimary
             border.width: 1
 
             Behavior on implicitHeight {

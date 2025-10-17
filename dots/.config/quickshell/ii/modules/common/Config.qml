@@ -135,7 +135,7 @@ Singleton {
 
             property JsonObject apps: JsonObject {
                 property string bluetooth: "kcmshell6 kcm_bluetooth"
-                property string network: "kitty -1 fish -c nmtui"
+                property string network: "plasmawindowed org.kde.plasma.networkmanagement"
                 property string networkEthernet: "kcmshell6 kcm_networkmanagement"
                 property string taskManager: "plasma-systemmonitor --page-name Processes"
                 property string terminal: "kitty -1" // This is only for shell actions
@@ -239,9 +239,15 @@ Singleton {
                         property bool showUnreadCount: false
                     }
                 }
+                property JsonObject prayerTimes: JsonObject {
+                    property string city: ""
+                    property string country: ""
+                    property bool enable: false
+                }
             }
 
             property JsonObject battery: JsonObject {
+                property int full: 90
                 property int low: 20
                 property int critical: 5
                 property bool automaticSuspend: true
@@ -395,13 +401,27 @@ Singleton {
                 }
             }
 
+            property JsonObject sounds: JsonObject {
+                property bool battery: true
+                property bool pomodoro: true
+                property string theme: "freedesktop"
+                property bool notification: true
+                property bool adhan: true
+            }
+
+            property JsonObject submaps: JsonObject {
+                property list<string> icons: ["aspect_ratio", "interactive_space"]
+                property list<string> names: ["resize", "virtual-machine"]
+            }
+
             property JsonObject time: JsonObject {
                 // https://doc.qt.io/qt-6/qtime.html#toString
                 property string format: "hh:mm"
                 property string shortDateFormat: "dd/MM"
+                property string longDateFormat: "dd/MM/yyyy"
                 property string dateFormat: "ddd, dd/MM"
+                property int firstDayOfWeek: 0 // 0: Monday, 1: Tuesday, 2: Wednesday, 3: Thursday, 4: Friday, 5: Saturday, 6: Sunday
                 property JsonObject pomodoro: JsonObject {
-                    property string alertSound: ""
                     property int breakTime: 300
                     property int cyclesBeforeLongBreak: 4
                     property int focus: 1500

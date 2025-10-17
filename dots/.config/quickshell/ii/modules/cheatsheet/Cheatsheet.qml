@@ -18,6 +18,10 @@ Scope { // Scope
             "name": Translation.tr("Keybinds")
         },
         {
+            "icon": "calendar_view_week",
+            "name": Translation.tr("TimeTable")
+        },
+        {
             "icon": "experiment",
             "name": Translation.tr("Elements")
         },
@@ -72,8 +76,8 @@ Scope { // Scope
                 id: cheatsheetBackground
                 anchors.centerIn: parent
                 color: Appearance.colors.colLayer0
-                border.width: 1
-                border.color: Appearance.colors.colLayer0Border
+                border.width: 0
+                border.color: Appearance.m3colors.m3onPrimary
                 radius: Appearance.rounding.windowRounding
                 property real padding: 30
                 implicitWidth: cheatsheetColumnLayout.implicitWidth + padding * 2
@@ -183,6 +187,7 @@ Scope { // Scope
                         }
 
                         CheatsheetKeybinds {}
+                        CheatsheetTimetable {}
                         CheatsheetPeriodicTable {}
                     }
                 }

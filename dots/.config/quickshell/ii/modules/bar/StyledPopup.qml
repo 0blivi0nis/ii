@@ -74,8 +74,8 @@ LazyLoader {
             radius: Appearance.rounding.small
             children: [root.contentItem]
 
-            border.width: 1
-            border.color: Appearance.colors.colLayer0Border
+            border.width: 0
+            border.color: Appearance.m3colors.m3onPrimary
         }
     }
 }

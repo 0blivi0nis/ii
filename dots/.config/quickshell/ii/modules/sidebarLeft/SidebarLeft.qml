@@ -95,8 +95,8 @@ Scope { // Scope
                 width: sidebarRoot.sidebarWidth - Appearance.sizes.hyprlandGapsOut - Appearance.sizes.elevationMargin
                 height: parent.height - Appearance.sizes.hyprlandGapsOut * 2
                 color: Appearance.colors.colLayer0
-                border.width: 1
-                border.color: Appearance.colors.colLayer0Border
+                border.width: 0
+                border.color: Appearance.m3colors.m3onPrimary
                 radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
 
                 Behavior on width {

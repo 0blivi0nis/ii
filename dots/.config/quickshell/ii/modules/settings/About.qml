@@ -80,7 +80,7 @@ ContentPage {
     }
     ContentSection {
         icon: "folder_managed"
-        title: Translation.tr("Dotfiles")
+        title: Translation.tr("Shell")
 
         RowLayout {
             Layout.alignment: Qt.AlignHCenter

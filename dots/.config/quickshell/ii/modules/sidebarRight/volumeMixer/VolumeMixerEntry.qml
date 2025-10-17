@@ -53,10 +53,39 @@ Item {
                 }
             }
 
-            StyledSlider {
-                id: slider
-                value: root.node.audio.volume
-                onMoved: root.node.audio.volume = value
+            RowLayout {
+                StyledSlider {
+                    id: slider
+                    value: root.node.audio.volume
+                    onValueChanged: root.node.audio.volume = value
+                }
+
+                Rectangle {
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    radius: 16
+                    color: (root.node.audio?.muted ?? false) ? 
+                           Appearance.m3colors.m3error : 
+                           Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.1)
+                    border.color: Qt.rgba(1, 1, 1, 0.15)
+                    border.width: 0
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: (root.node.audio?.muted ?? false) ? "volume_off" : "volume_up"
+                        iconSize: Appearance.font.pixelSize.small
+                        color: (root.node.audio?.muted ?? false) ? 
+                               Appearance.m3colors.m3errorContainer : 
+                               Appearance.colors.colOnLayer1
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            if (root.node.audio) {
+                                root.node.audio.muted = !root.node.audio.muted;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
