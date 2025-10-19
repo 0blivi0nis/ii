@@ -4,6 +4,7 @@ import Quickshell.Io
 import QtQuick.Layouts
 import qs.services
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.common.widgets
 
 ContentPage {
@@ -119,7 +120,7 @@ ContentPage {
                 text: Translation.tr("Full warning")
                 value: Config.options.battery.full
                 from: 0
-                to: 100
+                to: 101
                 stepSize: 5
                 onValueChanged: {
                     Config.options.battery.full = value;
@@ -158,6 +159,7 @@ ContentPage {
         }
         ContentSubsection {
             title: Translation.tr("Generate translation with Gemini")
+            tooltip: Translation.tr("You'll need to enter your Gemini API key first.\nType /key on the sidebar for instructions.")
             
             ConfigRow {
                 MaterialTextArea {

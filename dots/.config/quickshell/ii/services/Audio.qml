@@ -86,5 +86,4 @@ Singleton {
         ];
         Quickshell.execDetached(command);
     }
-
 }

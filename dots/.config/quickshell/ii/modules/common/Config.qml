@@ -175,7 +175,7 @@ Singleton {
                     property bool enableWorkspace: true
                     property real workspaceZoom: 1.07 // Relative to your screen, not wallpaper size
                     property bool enableSidebar: true
-                    property real clockFactor: 1.13
+                    property real clockFactor: 1.2
                 }
             }
 
@@ -211,6 +211,7 @@ Singleton {
                     property bool showKeyboardToggle: true
                     property bool showDarkModeToggle: true
                     property bool showPerformanceProfileToggle: false
+                    property bool showScreenRecord: false
                 }
                 property JsonObject tray: JsonObject {
                     property bool monochromeIcons: true
@@ -247,9 +248,9 @@ Singleton {
             }
 
             property JsonObject battery: JsonObject {
-                property int full: 90
                 property int low: 20
                 property int critical: 5
+                property int full: 101
                 property bool automaticSuspend: true
                 property int suspend: 3
             }
@@ -358,7 +359,7 @@ Singleton {
             property JsonObject search: JsonObject {
                 property int nonAppResultDelay: 30 // This prevents lagging when typing
                 property string engineBaseUrl: "https://www.google.com/search?q="
-                property list<string> excludedSites: ["quora.com"]
+                property list<string> excludedSites: ["quora.com", "facebook.com"]
                 property bool sloppy: false // Uses levenshtein distance based scoring instead of fuzzy sort. Very weird.
                 property JsonObject prefix: JsonObject {
                     property bool showDefaultActionsWithoutPrefix: true
@@ -398,6 +399,28 @@ Singleton {
                     property real cornerRegionHeight: 2
                     property bool visualize: false
                     property bool clicklessCornerEnd: true
+                }
+
+                property JsonObject quickToggles: JsonObject {
+                    property string style: "android" // Options: classic, android
+                    property JsonObject android: JsonObject {
+                        property int columns: 5
+                        property list<var> toggles: [
+                            { type: "network", size: 2 },
+                            { type: "bluetooth", size: 2 },
+                            { type: "idleInhibitor", size: 1 },
+                            { type: "easyEffects", size: 1 },
+                            { type: "nightLight", size: 2 },
+                            { type: "darkMode", size: 2 }
+                        ]
+                    }
+                }
+
+                property JsonObject quickSliders: JsonObject {
+                    property bool enable: false
+                    property bool showMic: false
+                    property bool showVolume: true
+                    property bool showBrightness: true
                 }
             }
 
