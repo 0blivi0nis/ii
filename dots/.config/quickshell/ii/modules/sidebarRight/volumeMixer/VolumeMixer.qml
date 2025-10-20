@@ -221,157 +221,113 @@ Item {
         }
     }
 
-    // Device selector dialog
-    Item {
+    WindowDialog {
         anchors.fill: parent
-        z: 9999
+        show: root.showDeviceSelector
+        onDismiss: root.showDeviceSelector = false
+        backgroundHeight: 250
 
-        visible: opacity > 0
-        opacity: root.showDeviceSelector ? 1 : 0
-        Behavior on opacity {
-            NumberAnimation { 
-                duration: Appearance.animation.elementMoveFast.duration
-                easing.type: Appearance.animation.elementMoveFast.type
-                easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
-            }
+        WindowDialogTitle {
+            text: root.deviceSelectorInput ? Translation.tr("Select input device") : Translation.tr("Select output device")
         }
 
-        Rectangle { // Scrim
-            id: scrimOverlay
-            anchors.fill: parent
-            radius: Appearance.rounding.small
-            color: Appearance.colors.colScrim
-            MouseArea {
-                hoverEnabled: true
-                anchors.fill: parent
-                preventStealing: true
-                propagateComposedEvents: false
-            }
+        WindowDialogSeparator {
+            Layout.leftMargin: 0
+            Layout.rightMargin: 0
         }
 
-        Rectangle { // The dialog
-            id: dialog
-            color: Appearance.colors.colSurfaceContainerHigh
-            radius: Appearance.rounding.normal
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: 30
-            implicitHeight: dialogColumnLayout.implicitHeight
+
+        DialogSectionListView {
+            Layout.fillHeight: true
             
-            ColumnLayout {
-                id: dialogColumnLayout
-                anchors.fill: parent
-                spacing: 16
+            model: ScriptModel {
+                values: Pipewire.nodes.values.filter(node => {
+                    return !node.isStream && node.isSink !== root.deviceSelectorInput && node.audio
+                })
+            }
+            delegate: StyledRadioButton {
+                id: radioButton
+                Layout.fillWidth: true
+                required property var modelData
 
-                StyledText {
-                    id: dialogTitle
-                    Layout.topMargin: dialogMargins
-                    Layout.leftMargin: dialogMargins
-                    Layout.rightMargin: dialogMargins
-                    Layout.alignment: Qt.AlignLeft
-                    color: Appearance.m3colors.m3onSurface
-                    font.pixelSize: Appearance.font.pixelSize.larger
-                    text: root.deviceSelectorInput ? Translation.tr("Select input device") : Translation.tr("Select output device")
+                anchors {
+                    left: parent?.left
+                    right: parent?.right
                 }
 
-                Rectangle {
-                    color: Appearance.m3colors.m3outline
-                    implicitHeight: 1
-                    Layout.fillWidth: true
-                    Layout.leftMargin: dialogMargins
-                    Layout.rightMargin: dialogMargins
-                }
-
-                StyledFlickable {
-                    id: dialogFlickable
-                    Layout.fillWidth: true
-                    clip: true
-                    implicitHeight: Math.min(scrimOverlay.height - dialogMargins * 8 - dialogTitle.height - dialogButtonsRowLayout.height, devicesColumnLayout.implicitHeight)
-                    
-                    contentHeight: devicesColumnLayout.implicitHeight
-
-                    ColumnLayout {
-                        id: devicesColumnLayout
-                        anchors.fill: parent
-                        Layout.fillWidth: true
-                        spacing: 0
-
-                        Repeater {
-                            model: ScriptModel {
-                                values: Pipewire.nodes.values.filter(node => {
-                                    return !node.isStream && node.isSink !== root.deviceSelectorInput && node.audio
-                                })
-                            }
-
-                            // This could and should be refractored, but all data becomes null when passed wtf
-                            delegate: StyledRadioButton {
-                                id: radioButton
-                                required property var modelData
-                                Layout.leftMargin: root.dialogMargins
-                                Layout.rightMargin: root.dialogMargins
-                                Layout.fillWidth: true
-
-                                description: modelData.description
-                                checked: modelData.id === Pipewire.defaultAudioSink?.id
-
-                                Connections {
-                                    target: root
-                                    function onShowDeviceSelectorChanged() {
-                                        if(!root.showDeviceSelector) return;
-                                        radioButton.checked = (modelData.id === Pipewire.defaultAudioSink?.id)
-                                    }
-                                }
-
-                                onCheckedChanged: {
-                                    if (checked) {
-                                        root.selectedDevice = modelData
-                                    }
-                                }
-                            }
-                        }
-                        Item {
-                            implicitHeight: dialogMargins
-                        }
+                description: modelData.description
+                checked: modelData.id === (root.deviceSelectorInput ? Pipewire.defaultAudioSource?.id : Pipewire.defaultAudioSink?.id)
+                
+                Connections {
+                    target: root
+                    function onShowDeviceSelectorChanged() {
+                        if(!root.showDeviceSelector) return;
+                        radioButton.checked = (modelData.id === (root.deviceSelectorInput ? Pipewire.defaultAudioSource?.id : Pipewire.defaultAudioSink?.id))
                     }
                 }
-
-                Rectangle {
-                    color: Appearance.m3colors.m3outline
-                    implicitHeight: 1
-                    Layout.fillWidth: true
-                    Layout.leftMargin: dialogMargins
-                    Layout.rightMargin: dialogMargins
-                }
-
-                RowLayout {
-                    id: dialogButtonsRowLayout
-                    Layout.bottomMargin: dialogMargins
-                    Layout.leftMargin: dialogMargins
-                    Layout.rightMargin: dialogMargins
-                    Layout.alignment: Qt.AlignRight
-
-                    DialogButton {
-                        buttonText: Translation.tr("Cancel")
-                        onClicked: {
-                            root.showDeviceSelector = false
-                        }
+                onCheckedChanged: {
+                    if (checked) {
+                        root.selectedDevice = modelData
                     }
-                    DialogButton {
-                        buttonText: Translation.tr("OK")
-                        onClicked: {
-                            root.showDeviceSelector = false
-                            if (root.selectedDevice) {
-                                if (root.deviceSelectorInput) {
-                                    Pipewire.preferredDefaultAudioSource = root.selectedDevice
-                                } else {
-                                    Pipewire.preferredDefaultAudioSink = root.selectedDevice
-                                }
-                            }
+                }
+            }
+        }
+            
+
+        WindowDialogSeparator {
+            Layout.leftMargin: 0
+            Layout.rightMargin: 0
+        }
+
+        WindowDialogButtonRow {
+            DialogButton {
+                buttonText: Translation.tr("Details")
+                onClicked: {
+                    Quickshell.execDetached(["bash", "-c", `${Config.options.apps.volumeMixer}`]);
+                    GlobalStates.sidebarRightOpen = false;
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
+            }
+            
+            DialogButton {
+                buttonText: Translation.tr("Cancel")
+                onClicked: {
+                    root.showDeviceSelector = false
+                }
+            }
+            DialogButton {
+                buttonText: Translation.tr("OK")
+                onClicked: {
+                    root.showDeviceSelector = false
+                    if (root.selectedDevice) {
+                        if (root.deviceSelectorInput) {
+                            Pipewire.preferredDefaultAudioSource = root.selectedDevice
+                        } else {
+                            Pipewire.preferredDefaultAudioSink = root.selectedDevice
                         }
                     }
                 }
             }
+        }
+
+
+        component DialogSectionListView: StyledListView {
+            Layout.fillWidth: true
+            Layout.topMargin: -22
+            Layout.bottomMargin: -16
+            Layout.leftMargin: -Appearance.rounding.large
+            Layout.rightMargin: -Appearance.rounding.large
+            topMargin: 12
+            bottomMargin: 12
+            leftMargin: 20
+            rightMargin: 20
+
+            clip: true
+            spacing: 4
+            animateAppearance: false
         }
     }
 
