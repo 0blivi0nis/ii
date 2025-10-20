@@ -37,6 +37,6 @@ AndroidQuickToggleButton {
         }
     }
     StyledToolTip {
-        text: Translation.tr("Click to cycle through power profiles")
+        text: `Power Profile: ${root.statusText}`
     }
 }
