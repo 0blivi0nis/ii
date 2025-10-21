@@ -25,7 +25,7 @@ Item {
             visible: Config.options.bar.utilButtons.showScreenSnip
             sourceComponent: CircleUtilButton {
                 Layout.alignment: Qt.AlignVCenter
-                onClicked: GlobalStates.regionSelectorOpen = !GlobalStates.regionSelectorOpen
+                onClicked: Hyprland.dispatch("global quickshell:regionScreenshot")
                 MaterialSymbol {
                     horizontalAlignment: Qt.AlignHCenter
                     fill: 1
