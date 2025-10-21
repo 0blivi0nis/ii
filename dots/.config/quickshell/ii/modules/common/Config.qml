@@ -372,6 +372,11 @@ Singleton {
                     property string shellCommand: "$"
                     property string webSearch: "?"
                 }
+                property JsonObject imageSearch: JsonObject {
+                    property string imageSearchEngineBaseUrl: "https://lens.google.com/uploadbyurl?url="
+                    property string fileUploadApiEndpoint: "https://uguu.se/upload"
+                    property bool useCircleSelection: false
+                }
             }
 
             property JsonObject sidebar: JsonObject {
