@@ -308,6 +308,9 @@ Singleton {
                     property string to: "06:30"   // Format: "HH:mm", 24-hour time
                     property int colorTemperature: 5000
                 }
+                property JsonObject antiFlashbang: JsonObject {
+                    property bool enable: false
+                }
             }
 
             property JsonObject lock: JsonObject {
@@ -362,10 +365,14 @@ Singleton {
                     property bool content: true
                     property bool showLabel: false
                     property real opacity: 0.3
+                    property real contentRegionOpacity: 0.8
+                }
+                property JsonObject rect: JsonObject {
+                    property bool showAimLines: true
                 }
                 property JsonObject circle: JsonObject {
                     property int strokeWidth: 6
-                    property int padding: 40
+                    property int padding: 30
                 }
             }
 
