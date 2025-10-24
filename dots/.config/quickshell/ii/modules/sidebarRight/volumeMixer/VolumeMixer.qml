@@ -224,6 +224,7 @@ Item {
     WindowDialog {
         anchors.fill: parent
         show: root.showDeviceSelector
+        visible: show
         onDismiss: root.showDeviceSelector = false
         backgroundHeight: 250
 
