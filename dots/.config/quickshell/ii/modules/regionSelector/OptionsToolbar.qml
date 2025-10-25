@@ -20,6 +20,8 @@ Toolbar {
     // Use a synchronizer on these
     property var action
     property var selectionMode
+    // Signals
+    signal dismiss()
 
     MaterialCookie {
         Layout.fillHeight: true
@@ -62,9 +64,4 @@ Toolbar {
         onClicked: root.selectionMode = RegionSelection.SelectionMode.Circle
     }
 
-    IconToolbarButton {
-        text: "close"
-        colBackground: Appearance.colors.colLayer3
-        onClicked: root.dismiss();
-    }
 }
