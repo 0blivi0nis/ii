@@ -6,48 +6,22 @@ printf "${STY_CYAN}[$0]: 3. Copying config files\n${STY_RST}"
 
 # TODO: https://github.com/end-4/dots-hyprland/issues/2137
 
-function warning_rsync(){
+function warning_rsync_delete(){
   printf "${STY_YELLOW}"
-  printf "The commands using rsync will overwrite the destination when it exists already.\n"
+  printf "The command below uses --delete for rsync which overwrites the destination folder.\n"
   printf "${STY_RST}"
 }
 
-function backup_clashing_targets(){
-  # For dirs/files under target_dir, only backup those which clashes with the ones under source_dir
+function warning_rsync_normal(){
+  printf "${STY_YELLOW}"
+  printf "The command below uses rsync which overwrites the destination.\n"
+  printf "${STY_RST}"
+}
 
-  # Deal with arguments
-  local source_dir="$1"
-  local target_dir="$2"
-  local backup_dir="$3"
-
-  # Find clash dirs/files, save as clash_list
-  local clash_list=()
-  local source_list=($(ls -A "$source_dir"))
-  local target_list=($(ls -A "$target_dir"))
-  declare -A target_map
-  for i in "${target_list[@]}"; do
-    target_map["$i"]=1
-  done
-  for i in "${source_list[@]}"; do
-    if [[ -n "${target_map[$i]}" ]]; then
-      clash_list+=("$i")
-    fi
-  done
-
-  # Construct args_includes for rsync
-  local args_includes=()
-  for i in "${clash_list[@]}"; do
-    if [[ -d "$target_dir/$i" ]]; then
-      args_includes+=(--include="/$i/")
-      args_includes+=(--include="/$i/**")
-    else
-      args_includes+=(--include="/$i")
-    fi
-  done
-  args_includes+=(--exclude='*')
-
-  x mkdir -p $backup_dir
-  x rsync -av --progress "${args_includes[@]}" "$target_dir/" "$backup_dir/"
+function backup_configs(){
+  backup_clashing_targets dots/.config $XDG_CONFIG_HOME "${BACKUP_DIR}/.config"
+  backup_clashing_targets dots/.local/share $XDG_DATA_HOME "${BACKUP_DIR}/.local/share"
+  printf "${STY_BLUE}Backup into \"${BACKUP_DIR}\" finished.${STY_RST}\n"
 }
 
 function ask_backup_configs(){
@@ -57,33 +31,27 @@ function ask_backup_configs(){
   printf "${STY_RST}"
   while true;do
     echo "  y = Yes, backup"
-    echo "  n = No, skip to next"
+    echo "  n/s = No, skip to next"
     local p; read -p "====> " p
     case $p in
       [yY]) echo -e "${STY_BLUE}OK, doing backup...${STY_RST}" ;local backup=true;break ;;
-      [nN]) echo -e "${STY_BLUE}Alright, skipping...${STY_RST}" ;local backup=false;break ;;
+      [nNsS]) echo -e "${STY_BLUE}Alright, skipping...${STY_RST}" ;local backup=false;break ;;
       *) echo -e "${STY_RED}Please enter [y/n].${STY_RST}";;
      esac
   done
-  if $backup;then
-    backup_clashing_targets dots/.config $XDG_CONFIG_HOME "${BACKUP_DIR}/.config"
-    backup_clashing_targets dots/.local/share $XDG_DATA_HOME "${BACKUP_DIR}/.local/share"
-    printf "${STY_BLUE}Backup into \"${BACKUP_DIR}\" finished.${STY_RST}\n"
-  fi
+  if $backup;then backup_configs;fi
 }
 function auto_backup_configs(){
   # Backup when $BACKUP_DIR does not exist
-  if [[ ! -d "$BACKUP_DIR" ]]; then
-    backup_clashing_targets dots/.config $XDG_CONFIG_HOME "${BACKUP_DIR}/.config"
-    backup_clashing_targets dots/.local/share $XDG_DATA_HOME "${BACKUP_DIR}/.local/share"
-    printf "${STY_BLUE}Backup into \"${BACKUP_DIR}\" finished.${STY_RST}\n"
-  fi
+  if [[ ! -d "$BACKUP_DIR" ]]; then backup_configs;fi
 }
 
 #####################################################################################
+showfun auto_get_git_submodule
+v auto_get_git_submodule
 
 # In case some dirs does not exists
-v mkdir -p $XDG_BIN_HOME $XDG_CACHE_HOME $XDG_CONFIG_HOME $XDG_DATA_HOME
+v mkdir -p $XDG_BIN_HOME $XDG_CACHE_HOME $XDG_CONFIG_HOME $XDG_DATA_HOME/icons
 
 if [[ ! "${SKIP_BACKUP}" == true ]]; then
   case $ask in
@@ -102,17 +70,18 @@ fi
 # original dotfiles and new ones in the SAME DIRECTORY
 # (eg. in ~/.config/hypr) won't be mixed together
 
-# MISC (For dots/.config/* but not quickshell, not fish, not Hyprland)
+# MISC (For dots/.config/* but not quickshell, not fish, not Hyprland, not fontconfig)
 case $SKIP_MISCCONF in
   true) sleep 0;;
   *)
-    for i in $(find dots/.config/ -mindepth 1 -maxdepth 1 ! -name 'quickshell' ! -name 'fish' ! -name 'hypr' -exec basename {} \;); do
+    for i in $(find dots/.config/ -mindepth 1 -maxdepth 1 ! -name 'quickshell' ! -name 'fish' ! -name 'hypr' ! -name 'fontconfig' -exec basename {} \;); do
 #      i="dots/.config/$i"
       echo "[$0]: Found target: dots/.config/$i"
-      if [ -d "dots/.config/$i" ];then warning_rsync; v rsync -av --delete "dots/.config/$i/" "$XDG_CONFIG_HOME/$i/"
-      elif [ -f "dots/.config/$i" ];then warning_rsync; v rsync -av "dots/.config/$i" "$XDG_CONFIG_HOME/$i"
+      if [ -d "dots/.config/$i" ];then warning_rsync_delete; v rsync -av --delete "dots/.config/$i/" "$XDG_CONFIG_HOME/$i/"
+      elif [ -f "dots/.config/$i" ];then warning_rsync_normal; v rsync -av "dots/.config/$i" "$XDG_CONFIG_HOME/$i"
       fi
     done
+    warning_rsync_delete; v rsync -av "dots/.local/share/konsole/" "${XDG_DATA_HOME:-$HOME/.local/share}"/konsole/
     ;;
 esac
 
@@ -120,15 +89,24 @@ case $SKIP_QUICKSHELL in
   true) sleep 0;;
   *)
      # Should overwriting the whole directory not only ~/.config/quickshell/ii/ cuz https://github.com/end-4/dots-hyprland/issues/2294#issuecomment-3448671064
-    warning_rsync; v rsync -av --delete dots/.config/quickshell/ "$XDG_CONFIG_HOME"/quickshell/
+    warning_rsync_delete; v rsync -av --delete dots/.config/quickshell/ "$XDG_CONFIG_HOME"/quickshell/
     ;;
 esac
 
 case $SKIP_FISH in
   true) sleep 0;;
   *)
-    warning_rsync; v rsync -av --delete dots/.config/fish/ "$XDG_CONFIG_HOME"/fish/
+    warning_rsync_delete; v rsync -av --delete dots/.config/fish/ "$XDG_CONFIG_HOME"/fish/
     ;;
+esac
+
+case $SKIP_FONTCONFIG in
+  true) sleep 0;;
+  *)
+    case "$II_FONTSET_NAME" in
+      "") warning_rsync_delete; v rsync -av --delete dots/.config/fontconfig/ "$XDG_CONFIG_HOME"/fontconfig/ ;;
+      *) warning_rsync_delete; v rsync -av --delete dots-extra/fontsets/$II_FONTSET_NAME/ "$XDG_CONFIG_HOME"/fontconfig/ ;;
+    esac;;
 esac
 
 # For Hyprland
@@ -140,17 +118,25 @@ arg_excludes+=(--exclude '/hyprland.conf')
 case $SKIP_HYPRLAND in
   true) sleep 0;;
   *)
-    warning_rsync; v rsync -av --delete "${arg_excludes[@]}" dots/.config/hypr/ "$XDG_CONFIG_HOME"/hypr/
+    warning_rsync_delete; v rsync -av --delete "${arg_excludes[@]}" dots/.config/hypr/ "$XDG_CONFIG_HOME"/hypr/
+    # When hypr/custom does not exist, we assume that it's the firstrun.
+    if [ -d "$XDG_CONFIG_HOME/hypr/custom" ];then ii_firstrun=false;else ii_firstrun=true;fi
     t="$XDG_CONFIG_HOME/hypr/hyprland.conf"
     if [ -f $t ];then
       echo -e "${STY_BLUE}[$0]: \"$t\" already exists.${STY_RST}"
-      v mv $t $t.old
-      v cp -f dots/.config/hypr/hyprland.conf $t
-      existed_hypr_conf_firstrun=y
+      if $ii_firstrun;then
+        echo -e "${STY_BLUE}[$0]: It seems to be the firstrun.${STY_RST}"
+        v mv $t $t.old
+        v cp -f dots/.config/hypr/hyprland.conf $t
+        existed_hypr_conf_firstrun=y
+      else
+        echo -e "${STY_BLUE}[$0]: It seems not a firstrun.${STY_RST}"
+        v cp -f dots/.config/hypr/hyprland.conf $t.new
+        existed_hypr_conf=y
+      fi
     else
       echo -e "${STY_YELLOW}[$0]: \"$t\" does not exist yet.${STY_RST}"
       v cp dots/.config/hypr/hyprland.conf $t
-      existed_hypr_conf=n
     fi
     t="$XDG_CONFIG_HOME/hypr/hypridle.conf"
     if [ -f $t ];then
@@ -177,7 +163,7 @@ case $SKIP_HYPRLAND in
       echo -e "${STY_BLUE}[$0]: \"$t\" already exists, will not do anything.${STY_RST}"
     else
       echo -e "${STY_YELLOW}[$0]: \"$t\" does not exist yet.${STY_RST}"
-      warning_rsync; v rsync -av --delete dots/.config/hypr/custom/ $t/
+      v rsync -av --delete dots/.config/hypr/custom/ $t/
     fi
     ;;
 esac
@@ -187,8 +173,7 @@ declare -a arg_excludes=()
 # some foldes (eg. .local/bin) should be processed separately to avoid `--delete' for rsync,
 # since the files here come from different places, not only about one program.
 # v rsync -av "dots/.local/bin/" "$XDG_BIN_HOME" # No longer needed since scripts are no longer in ~/.local/bin
-warning_rsync; v rsync -av "dots/.local/share/icons/" "${XDG_DATA_HOME:-$HOME/.local/share}"/icons/
-warning_rsync; v rsync -av "dots/.local/share/konsole/" "${XDG_DATA_HOME:-$HOME/.local/share}"/konsole/
+v cp -f "dots/.local/share/icons/illogical-impulse.svg" "${XDG_DATA_HOME}"/icons/illogical-impulse.svg
 
 # Prevent hyprland from not fully loaded
 sleep 1
