@@ -194,6 +194,7 @@ Singleton {
                 }
                 property bool bottom: false // Instead of top
                 property int cornerStyle: 0 // 0: Hug | 1: Float | 2: Plain rectangle
+                property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
                 property bool borderless: false // true for no grouping of items
                 property string topLeftIcon: "spark" // Options: "distro" or any icon name in ~/.config/quickshell/ii/assets/icons
                 property bool showBackground: true
@@ -379,6 +380,11 @@ Singleton {
 
             property JsonObject resources: JsonObject {
                 property int updateInterval: 3000
+            }
+
+            property JsonObject musicRecognition: JsonObject {
+                property int timeout: 16
+                property int interval: 4
             }
 
             property JsonObject search: JsonObject {
