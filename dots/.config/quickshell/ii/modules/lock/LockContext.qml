@@ -22,10 +22,6 @@ Scope {
     property bool fingerprintsConfigured: false
     property var targetAction: LockContext.ActionEnum.Unlock
 
-    Component.onCompleted: {
-        fingerprintCheckProcess.running = true;
-    }
-
     function resetTargetAction() {
         root.targetAction = LockContext.ActionEnum.Unlock;
     }
