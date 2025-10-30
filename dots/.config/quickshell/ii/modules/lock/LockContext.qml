@@ -2,7 +2,7 @@ import qs
 import qs.modules.common
 import QtQuick
 import Quickshell
-import Quickshell.Io // Required for StdioCollector
+import Quickshell.Io
 import Quickshell.Services.Pam
 
 Scope {
@@ -77,7 +77,8 @@ Scope {
     }
 
     Process {
-        id: fingerprintCheckProcess
+        id: fingerprintCheckProc
+        running: true
         command: ["bash", "-c", "fprintd-list $(whoami)"]
         stdout: StdioCollector {
             id: fingerprintOutputCollector

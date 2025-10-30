@@ -103,22 +103,17 @@ MouseArea {
         // Fingerprint
         Loader {
             Layout.leftMargin: 10
+            Layout.rightMargin: 6
             Layout.alignment: Qt.AlignVCenter
-            active: root.context.fingerprintsConfigured // Bind to actual fingerprint availability
-            visible: root.context.fingerprintsConfigured
+            active: root.context.fingerprintsConfigured
+            visible: active
 
-            sourceComponent: Row {
-                spacing: 8
-
-                MaterialSymbol {
-                    id: fingerprintIcon
-                    anchors.verticalCenter: parent.verticalCenter
-                    fill: 1
-                    text: "fingerprint"
-                    iconSize: Appearance.font.pixelSize.huge
-                    color: Appearance.colors.colOnSurfaceVariant
-                    animateChange: true
-                }
+            sourceComponent: MaterialSymbol {
+                id: fingerprintIcon
+                fill: 1
+                text: "fingerprint"
+                iconSize: Appearance.font.pixelSize.hugeass
+                color: Appearance.colors.colOnSurfaceVariant
             }
         }
 
@@ -148,7 +143,7 @@ MouseArea {
             Keys.onPressed: event => {
                 root.context.resetClearTimer();
             }
-
+            
             layer.enabled: true
             layer.effect: OpacityMask {
                 maskSource: Rectangle {
@@ -158,15 +153,35 @@ MouseArea {
                 }
             }
 
+            // Shake when wrong password
+            SequentialAnimation {
+                id: wrongPasswordShakeAnim
+                NumberAnimation { target: passwordBox; property: "x"; to: -30; duration: 50 }
+                NumberAnimation { target: passwordBox; property: "x"; to: 30; duration: 50 }
+                NumberAnimation { target: passwordBox; property: "x"; to: -15; duration: 40 }
+                NumberAnimation { target: passwordBox; property: "x"; to: 15; duration: 40 }
+                NumberAnimation { target: passwordBox; property: "x"; to: 0; duration: 30 }
+            }
+            Connections {
+                target: GlobalStates
+                function onScreenUnlockFailedChanged() {
+                    if (GlobalStates.screenUnlockFailed) wrongPasswordShakeAnim.restart();
+                }
+            }
+
             // We're drawing dots manually
-            color: ColorUtils.transparentize(Appearance.colors.colOnLayer1)
-            PasswordChars {
+            property bool materialShapeChars: Config.options.lock.materialShapeChars
+            color: ColorUtils.transparentize(Appearance.colors.colOnLayer1, materialShapeChars ? 1 : 0)
+            Loader {
+                active: passwordBox.materialShapeChars
                 anchors {
                     fill: parent
                     leftMargin: passwordBox.padding
                     rightMargin: passwordBox.padding
                 }
-                length: root.context.currentText.length
+                sourceComponent: PasswordChars {
+                    length: root.context.currentText.length
+                }
             }
         }
 
