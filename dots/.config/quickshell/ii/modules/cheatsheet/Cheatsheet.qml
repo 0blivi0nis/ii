@@ -135,13 +135,13 @@ Scope { // Scope
                     anchors.centerIn: parent
                     spacing: 20
 
-                    StyledText {
-                        id: cheatsheetTitle
-                        Layout.alignment: Qt.AlignHCenter
-                        font.family: Appearance.font.family.title
-                        font.pixelSize: Appearance.font.pixelSize.title
-                        text: Translation.tr("Cheat sheet")
-                    }
+                    // StyledText {
+                    //     id: cheatsheetTitle
+                    //     Layout.alignment: Qt.AlignHCenter
+                    //     font.family: Appearance.font.family.title
+                    //     font.pixelSize: Appearance.font.pixelSize.title
+                    //     text: Translation.tr("Cheat sheet")
+                    // }
                     PrimaryTabBar { // Tab strip
                         id: tabBar
                         tabButtonList: root.tabButtonList
