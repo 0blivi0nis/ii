@@ -142,6 +142,22 @@ ContentPage {
     }
 
     ContentSection {
+        icon: "mosque"
+        title: Translation.tr("Prayer Times")
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "check"
+                text: Translation.tr("Enable")
+                checked: Config.options.bar.prayerTimes.enable
+                onCheckedChanged: {
+                    Config.options.bar.prayerTimes.enable = checked;
+                }
+            }
+        }
+    }
+
+    ContentSection {
         icon: "shelf_auto_hide"
         title: Translation.tr("Tray")
 
@@ -331,43 +347,6 @@ ContentPage {
                         value: '["I","II","III","IV","V","VI","VII","VIII","IX","X"]'
                     }
                 ]
-            }
-        }
-    }
-
-    ContentSection {
-        icon: "mosque"
-        title: Translation.tr("Prayer Times")
-        ConfigRow {
-            uniform: true
-            ConfigSwitch {
-                buttonIcon: "check"
-                text: Translation.tr("Enable")
-                checked: Config.options.bar.prayerTimes.enable
-                onCheckedChanged: {
-                    Config.options.bar.prayerTimes.enable = checked;
-                }
-            }
-        }
-        ConfigRow {
-            uniform: true
-            MaterialTextArea {
-                Layout.fillWidth: true
-                placeholderText: Translation.tr("City")
-                text: Config.options.bar.prayerTimes.city
-                wrapMode: TextEdit.Wrap
-                onTextChanged: {
-                    Config.options.bar.prayerTimes.city = text;
-                }
-            }
-            MaterialTextArea {
-                Layout.fillWidth: true
-                placeholderText: Translation.tr("Country")
-                text: Config.options.bar.prayerTimes.country
-                wrapMode: TextEdit.Wrap
-                onTextChanged: {
-                    Config.options.bar.prayerTimes.country = text;
-                }
             }
         }
     }
