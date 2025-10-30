@@ -64,37 +64,12 @@ Item {
             }
 
             // Placeholder when list is empty
-            Item {
-                anchors.fill: listView
-
-                visible: opacity > 0
-                opacity: (root.appPwNodes.length === 0) ? 1 : 0
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: Appearance.animation.menuDecel.duration
-                        easing.type: Appearance.animation.menuDecel.type
-                    }
-                }
-
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 5
-
-                    MaterialSymbol {
-                        Layout.alignment: Qt.AlignHCenter
-                        iconSize: 55
-                        color: Appearance.m3colors.m3outline
-                        text: "brand_awareness"
-                    }
-                    StyledText {
-                        Layout.alignment: Qt.AlignHCenter
-                        font.pixelSize: Appearance.font.pixelSize.normal
-                        color: Appearance.m3colors.m3outline
-                        horizontalAlignment: Text.AlignHCenter
-                        text: Translation.tr("No audio source")
-                    }
-                }
+            PagePlaceholder {
+                shown: root.appPwNodes.length === 0
+                icon: "notifications_active"
+                description: Translation.tr("No Audio Source")
+                shape: MaterialShape.Shape.Gem
+                descriptionHorizontalAlignment: Text.AlignHCenter
             }
         }
         // output / input
