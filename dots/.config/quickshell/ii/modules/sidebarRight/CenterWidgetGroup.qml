@@ -7,6 +7,7 @@ import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Qt.labs.synchronizer
 
 Rectangle {
     id: root
@@ -46,10 +47,8 @@ Rectangle {
         PrimaryTabBar {
             id: tabBar
             tabButtonList: root.tabButtonList
-            externalTrackedTab: root.selectedTab
-            
-            function onCurrentIndexChanged(currentIndex) {
-                root.selectedTab = currentIndex
+            Synchronizer on currentIndex {
+                property alias source: root.selectedTab
             }
         }
 
@@ -62,7 +61,6 @@ Rectangle {
             currentIndex: root.selectedTab
             onCurrentIndexChanged: {
                 tabBar.enableIndicatorAnimation = true
-                root.selectedTab = currentIndex
             }
 
             clip: true
