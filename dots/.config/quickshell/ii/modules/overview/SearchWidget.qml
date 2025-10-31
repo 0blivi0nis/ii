@@ -205,7 +205,7 @@ Item { // Wrapper
         implicitWidth: columnLayout.implicitWidth
         implicitHeight: columnLayout.implicitHeight
         radius: searchBar.height / 2 + searchBar.verticalPadding
-        color: Appearance.colors.colLayer0
+        color: Appearance.colors.colBackgroundSurfaceContainer
 
         ColumnLayout {
             id: columnLayout
