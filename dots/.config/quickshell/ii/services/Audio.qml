@@ -14,7 +14,7 @@ Singleton {
     property bool ready: Pipewire.defaultAudioSink?.ready ?? false
     property PwNode sink: Pipewire.defaultAudioSink
     property PwNode source: Pipewire.defaultAudioSource
-    readonly property real hardMaxValue: 2.00 // People keep joking about setting volume to 5172% so...
+    readonly property real hardMaxValue: 1.50 // People keep joking about setting volume to 5172% so...
     property string audioTheme: Config.options.sounds.theme
 
     signal sinkProtectionTriggered(string reason);
@@ -28,8 +28,15 @@ Singleton {
         property bool lastReady: false
         property real lastVolume: 0
         function onVolumeChanged() {
+            let newVolume = sink.audio.volume;
+
+            if (newVolume > root.hardMaxValue) {
+                newVolume = root.hardMaxValue;
+                sink.audio.volume = root.hardMaxValue;
+            }
+
             if (!Config.options.audio.protection.enable) return;
-            const newVolume = sink.audio.volume;
+
             // when resuming from suspend, we should not write volume to avoid pipewire volume reset issues
             if (isNaN(newVolume) || newVolume === undefined || newVolume === null) {
                 lastReady = false;
