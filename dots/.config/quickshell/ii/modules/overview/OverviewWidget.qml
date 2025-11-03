@@ -63,7 +63,7 @@ Item {
         implicitWidth: workspaceColumnLayout.implicitWidth + padding * 2
         implicitHeight: workspaceColumnLayout.implicitHeight + padding * 2
         radius: root.largeWorkspaceRadius + padding
-        color: Appearance.colors.colBackgroundSurfaceContainer
+        color: Appearance.colors.colLayer0
 
         Column { // Workspaces
             id: workspaceColumnLayout
@@ -86,7 +86,7 @@ Item {
                             required property int index
                             property int colIndex: index
                             property int workspaceValue: root.workspaceGroup * root.workspacesShown + row.index * Config.options.overview.columns + colIndex + 1
-                            property color defaultWorkspaceColor: ColorUtils.mix(Appearance.colors.colBackgroundSurfaceContainer, Appearance.colors.colSurfaceContainerHigh, 0.8)
+                            property color defaultWorkspaceColor: ColorUtils.mix(Appearance.colors.colLayer1, Appearance.colors.colSurfaceContainerHigh, 0.8)
                             property color hoveredWorkspaceColor: ColorUtils.mix(defaultWorkspaceColor, Appearance.colors.colLayer1Hover, 0.1)
                             property color hoveredBorderColor: Appearance.colors.colLayer2Hover
                             property bool hoveredWhileDragging: false

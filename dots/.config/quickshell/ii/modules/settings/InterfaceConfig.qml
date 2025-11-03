@@ -967,6 +967,15 @@ ContentPage {
                 Config.options.overview.enable = checked;
             }
         }
+        ConfigSwitch {
+            buttonIcon: "center_focus_strong"
+            text: Translation.tr("Center icons")
+            checked: Config.options.overview.centerIcons
+            visible: Config.options.overview.enable
+            onCheckedChanged: {
+                Config.options.overview.centerIcons = checked;
+            }
+        }
         ConfigSpinBox {
             icon: "loupe"
             text: Translation.tr("Scale (%)")

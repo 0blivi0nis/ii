@@ -36,7 +36,7 @@ AndroidQuickToggleButton {
     // Visual state - show as "toggled" when not in integrated mode
     toggled: currentProfile !== "integrated"
     
-    onClicked: {
+    mainAction: () => {
         let nextProfile = getNextProfile()
         setNextProfile(nextProfile)
     }

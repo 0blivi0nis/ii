@@ -44,11 +44,14 @@ Rectangle {
         anchors.fill: parent
         spacing: 0
 
-        PrimaryTabBar {
-            id: tabBar
-            tabButtonList: root.tabButtonList
-            Synchronizer on currentIndex {
-                property alias source: root.selectedTab
+        Toolbar {
+            Layout.alignment: Qt.AlignHCenter
+            enableShadow: false
+            ToolbarTabBar {
+                id: tabBar
+                tabButtonList: root.tabButtonList
+                currentIndex: root.selectedTab
+                onCurrentIndexChanged: root.selectedTab = currentIndex
             }
         }
 
