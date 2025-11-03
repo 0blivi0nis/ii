@@ -32,7 +32,7 @@ ContentPage {
             }
         }
         ConfigRow {
-            enabled: Config.options.audio.protection.enable
+            visible: Config.options.audio.protection.enable
             ConfigSpinBox {
                 icon: "arrow_warm_up"
                 text: Translation.tr("Max allowed increase")
@@ -115,6 +115,7 @@ ContentPage {
         }
         ConfigRow {
             uniform: true
+            visible: Config.options.sounds.battery
             ConfigSpinBox {
                 icon: "charger"
                 text: Translation.tr("Full warning")
