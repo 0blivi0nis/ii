@@ -280,7 +280,7 @@ Variants {
                 }
 
                 FadeLoader {
-                    shown: Config.options.background.widgets.clock.enable
+                    shown: Config.options.background.widgets.clock.enable | GlobalStates.screenLocked
                     sourceComponent: ClockWidget {
                         screenWidth: bgRoot.screen.width
                         screenHeight: bgRoot.screen.height
