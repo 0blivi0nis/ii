@@ -366,6 +366,11 @@ Singleton {
                 property bool pinnedOnStartup: false
             }
 
+            property JsonObject overlay: JsonObject {
+                property bool openingZoomAnimation: true
+                property bool darkenScreen: true
+            }
+
             property JsonObject overview: JsonObject {
                 property bool enable: true
                 property real scale: 0.18 // Relative to screen size
@@ -473,6 +478,14 @@ Singleton {
                     property bool showVolume: true
                     property bool showBrightness: true
                 }
+            }
+
+            property JsonObject screenRecord: JsonObject {
+                property string savePath: Directories.videos.replace("file://","") // strip "file://"
+            }
+
+            property JsonObject screenSnip: JsonObject {
+                property string savePath: "" // only copy to clipboard when empty
             }
 
             property JsonObject sounds: JsonObject {
