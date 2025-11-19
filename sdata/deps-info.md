@@ -73,9 +73,6 @@ This file contains information about the dependencies, currently it describes ab
   - Used in Quickshell and matugen config.
 - `starship`
   - Used in Fish config.
-- `ttf-gabarito-git`
-  - Font name: `Gabarito`
-  - Used in fuzzel and Quickshell config.
 - `ttf-jetbrains-mono-nerd`
   - Font name: `JetBrains Mono NF`, `JetBrainsMono Nerd Font`.
   - Used in foot, kdeglobals, kitty, qt5ct, qt6ct and Quickshell config.
@@ -85,9 +82,6 @@ This file contains information about the dependencies, currently it describes ab
 - `ttf-readex-pro`
   - Font name: `Readex Pro`
   - Used in Quickshell config.
-- `ttf-roboto-flex`
-  - Font name: `Roboto Flex`
-  - Used in Hyprland, matugen and Quickshell config.
 - `ttf-rubik-vf`
   - Font name: `Rubik`, `Rubik Light`
   - Used in Hyprland, kdeglobals, matugen, qt5ct, qt6ct and Quickshell config.
@@ -211,6 +205,7 @@ Extra dependencies.
 - `qt6-translations`
 - `qt6-virtualkeyboard`
 - `qt6-wayland`
+- `kirigami`
 - `kdialog`
 - `syntax-highlighting`
 

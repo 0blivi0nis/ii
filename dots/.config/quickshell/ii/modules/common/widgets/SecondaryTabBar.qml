@@ -38,16 +38,16 @@ TabBar {
             width: ((Math.max(idxPair.idx1, idxPair.idx2) + 1) * baseWidth - root.indicatorPadding) - x
         }
 
-        Rectangle { // Tabbar bottom border
-            id: tabBarBottomBorder
-            z: 9998
-            anchors.bottom: parent.bottom
-            height: 1
-            anchors {
-                left: parent.left
-                right: parent.right
-            }
-            color: Appearance.colors.colOutlineVariant
-        }
+        // Rectangle { // Tabbar bottom border
+        //     id: tabBarBottomBorder
+        //     z: 9998
+        //     anchors.bottom: parent.bottom
+        //     height: 1
+        //     anchors {
+        //         left: parent.left
+        //         right: parent.right
+        //     }
+        //     color: Appearance.colors.colOutlineVariant
+        // }
     }
 }

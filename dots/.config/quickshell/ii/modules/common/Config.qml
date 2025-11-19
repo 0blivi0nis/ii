@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.modules.common.functions
 
 Singleton {
     id: root
@@ -147,6 +148,7 @@ Singleton {
                 property string networkEthernet: "kcmshell6 kcm_networkmanagement"
                 property string taskManager: "plasma-systemmonitor --page-name Processes"
                 property string terminal: "kitty -1" // This is only for shell actions
+                property string update: "kitty -1 --hold=yes zsh -i -c 'sudo pacman -Syu'"
                 property string volumeMixer: `~/.config/hypr/hyprland/scripts/launch_first_available.sh "pavucontrol-qt" "pavucontrol"`
             }
 
@@ -158,7 +160,8 @@ Singleton {
                         property string placementStrategy: "leastBusy" // "free", "leastBusy", "mostBusy"
                         property real x: 100
                         property real y: 100
-                        property string style: "cookie" // Options: "cookie", "digital"
+                        property string style: "cookie"        // Options: "cookie", "digital"
+                        property string styleLocked: "cookie"  // Options: "cookie", "digital"
                         property JsonObject cookie: JsonObject {
                             property bool aiStyling: false
                             property int sides: 14
@@ -236,13 +239,6 @@ Singleton {
                     property bool showPerformanceProfileToggle: false
                     property bool showScreenRecord: false
                 }
-                property JsonObject tray: JsonObject {
-                    property bool monochromeIcons: true
-                    property bool showItemId: false
-                    property bool invertPinnedItems: true // Makes the below a whitelist for the tray and blacklist for the pinned area
-                    property list<string> pinnedItems: [ ]
-                    property bool filterPassive: true
-                }
                 property JsonObject workspaces: JsonObject {
                     property bool monochromeIcons: true
                     property int shown: 10
@@ -263,6 +259,9 @@ Singleton {
                     property JsonObject notifications: JsonObject {
                         property bool showUnreadCount: false
                     }
+                }
+                property JsonObject tooltips: JsonObject {
+                    property bool clickToShow: false
                 }
                 property JsonObject prayerTimes: JsonObject {
                     property string city: ""
@@ -436,6 +435,14 @@ Singleton {
                 property int historyLength: 60
             }
 
+            property JsonObject tray: JsonObject {
+                property bool monochromeIcons: true
+                property bool showItemId: false
+                property bool invertPinnedItems: true // Makes the below a whitelist for the tray and blacklist for the pinned area
+                property list<var> pinnedItems: [ "Fcitx" ]
+                property bool filterPassive: true
+            }
+
             property JsonObject musicRecognition: JsonObject {
                 property int timeout: 16
                 property int interval: 4
@@ -550,6 +557,12 @@ Singleton {
                 }
                 property bool secondPrecision: false
             }
+
+            property JsonObject updates: JsonObject {
+                property int checkInterval: 120 // minutes
+                property int adviseUpdateThreshold: 75 // packages
+                property int stronglyAdviseUpdateThreshold: 200 // packages
+            }
             
             property JsonObject wallpaperSelector: JsonObject {
                 property bool useSystemFileDialog: false
@@ -577,9 +590,16 @@ Singleton {
             }
 
             property JsonObject waffles: JsonObject {
+                // Animations on Windoes are kinda janky. Setting the following to
+                // false will make (some) stuff also be like that for accuracy. 
+                // Example: the right-click menu of the Start button
+                property bool smootherAnimations: true
                 property JsonObject bar: JsonObject {
                     property bool bottom: true
                     property bool leftAlignApps: false
+                }
+                property JsonObject actionCenter: JsonObject {
+                    property list<string> toggles: [ "network", "bluetooth", "easyEffects", "powerProfile", "idleInhibitor", "nightLight", "darkMode", "antiFlashbang", "cloudflareWarp", "mic", "audio", "musicRecognition", "notifications", "onScreenKeyboard", "gameMode", "screenSnip", "colorPicker" ]
                 }
             }
         }

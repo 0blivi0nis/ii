@@ -164,18 +164,18 @@ ContentPage {
         ConfigSwitch {
             buttonIcon: "keep"
             text: Translation.tr('Make icons pinned by default')
-            checked: Config.options.bar.tray.invertPinnedItems
+            checked: Config.options.tray.invertPinnedItems
             onCheckedChanged: {
-                Config.options.bar.tray.invertPinnedItems = checked;
+                Config.options.tray.invertPinnedItems = checked;
             }
         }
         
         ConfigSwitch {
             buttonIcon: "colors"
             text: Translation.tr('Tint icons')
-            checked: Config.options.bar.tray.monochromeIcons
+            checked: Config.options.tray.monochromeIcons
             onCheckedChanged: {
-                Config.options.bar.tray.monochromeIcons = checked;
+                Config.options.tray.monochromeIcons = checked;
             }
         }
     }
@@ -347,6 +347,19 @@ ContentPage {
                         value: '["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"]'
                     }
                 ]
+            }
+        }
+    }
+
+    ContentSection {
+        icon: "tooltip"
+        title: Translation.tr("Tooltips")
+        ConfigSwitch {
+            buttonIcon: "ads_click"
+            text: Translation.tr("Click to show")
+            checked: Config.options.bar.tooltips.clickToShow
+            onCheckedChanged: {
+                Config.options.bar.tooltips.clickToShow = checked;
             }
         }
     }
