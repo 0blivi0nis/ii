@@ -12,24 +12,43 @@ Item {
     property real spacing: 8
     property color backgroundColor: "transparent"
 
+    property alias addMode: calendarAddComponent.editMode
+    property alias editMode: calendarEditComponent.editMode
+    
+
+    property var tempCalendarEvent: null // used to pass event to CalendarEdit
+
     property int startHour: 0
     property int startMinute: 0
     property int endHour: 24
     property int slotDuration: 60 // in minutes
     property int slotHeight: 60 // in pixels
-    property int timeColumnWidth: 100
-    property real maxContentWidth: 1200
+    property int timeColumnWidth: 90
+    property real maxContentWidth: parent.width - 10
 
     readonly property int totalSlots: Math.floor(((endHour * 60) - (startHour * 60 + startMinute)) / slotDuration)
     readonly property real pixelsPerMinute: slotHeight / slotDuration
     readonly property int contentHeight: totalSlots * slotHeight
 
-    property real maxHeight: 700
+    property real maxHeight: parent.height
     property real headerHeight: 64 // Material 3 standard header height
     property real currentTimeY: -1
     property bool initialScrollApplied: false
-    readonly property real dayColumnWidth: Math.min(180, (maxContentWidth - timeColumnWidth - (days.length + 1) * spacing) / days.length)
-  readonly property int currentDayIndex: (DateTime.clock.date.getDay() - Config.options.time.firstDayOfWeek+ 6)%7
+    // Make columns adapt to available space by calculating dayColumnWidth based on available width
+    readonly property real dayColumnWidth: (function() {
+        if (!root.days || root.days.length === 0) return 100
+        // Calculate available space excluding time column and spacing
+        const totalWidth = root.maxContentWidth || root.width
+        const availableWidth = totalWidth - timeColumnWidth - spacing
+        // Calculate exact column width (remove extra spacing at the end)
+        return (availableWidth - (root.days.length - 1) * spacing) / root.days.length
+    })()
+
+    // Calculate total content width based on the column widths
+    readonly property real totalContentWidth: timeColumnWidth + spacing + 
+        (root.days ? (root.days.length * dayColumnWidth + (root.days.length - 1) * spacing) : 0)
+
+    readonly property int currentDayIndex: (DateTime.clock.date.getDay() - Config.options.time.firstDayOfWeek+ 6)%7
 
     implicitWidth: Math.min(maxContentWidth, timeColumnWidth + (dayColumnWidth * days.length) + ((days.length + 1) * spacing))
     implicitHeight: Math.min(headerHeight + contentHeight, maxHeight)
@@ -71,8 +90,22 @@ Item {
 
         currentTimeY = diffMinutes * root.pixelsPerMinute;
     }
-
-  
+    
+    function dateForColumn(index) {
+        const today = new Date(DateTime.clock.date);
+        const firstDayOfWeek = Config.options.time.firstDayOfWeek + 1;
+        const offset = CalendarService.currentWeekOffset || 0;
+        
+        const currentDayOfWeek = today.getDay();
+        const daysFromWeekStart = (currentDayOfWeek - firstDayOfWeek + 7) % 7;
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - daysFromWeekStart + offset * 7);
+        
+        const d = new Date(weekStart);
+        d.setDate(weekStart.getDate() + index);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
 
     function withOpacity(colorValue, alpha) {
         if (!colorValue)
@@ -225,7 +258,6 @@ Item {
         Qt.callLater(root.maybeApplyInitialScroll);
     }
 
-    // Material 3 surface container
     Rectangle {
         anchors.fill: parent
         color: Appearance.colors.colSurfaceContainer
@@ -251,52 +283,99 @@ Item {
                 // Current time indicator
                 Rectangle {
                     anchors.centerIn: parent
-                    width: Math.min(timeHeaderText.implicitWidth + 16, parent.width - 4)
                     height: 32
                     radius: Appearance.rounding.normal
                     color: Appearance.colors.colSecondaryContainer
 
-                    StyledText {
-                        id: timeHeaderText
+                    Row {
                         anchors.centerIn: parent
-                        text: DateTime.time
-                        font.weight: Font.Medium
-                        color: Appearance.colors.colOnSecondaryContainer
-                        elide: Text.ElideRight
+                        spacing: 8
+
+                        // RippleButton {
+                        //     buttonRadius: Appearance.rounding.full
+                        //     width: 35
+                        //     height: 35
+                        //     onClicked: CalendarService.previousWeek()
+                        //     colBackground: Appearance.colors.colSurfaceContainerHigh
+                        //     contentItem: MaterialSymbol {
+                        //         anchors.centerIn: parent
+                        //         horizontalAlignment: Text.AlignHCenter
+                        //         font.pixelSize: Appearance.font.pixelSize.title
+                        //         text: "chevron_left"
+                        //     }
+                        // }
+
+                        // RippleButton {
+                        //     buttonRadius: Appearance.rounding.full
+                        //     width: 35
+                        //     height: 35
+                        //     onClicked: CalendarService.nextWeek()
+                        //     colBackground: Appearance.colors.colSurfaceContainerHigh
+                        //     contentItem: MaterialSymbol {
+                        //         anchors.centerIn: parent
+                        //         horizontalAlignment: Text.AlignHCenter
+                        //         font.pixelSize: Appearance.font.pixelSize.title
+                        //         text: "chevron_right"
+                        //     }
+                        // }
                     }
                 }
             }
-
             Repeater {
                 model: root.days
                 delegate: Item {
                     width: root.dayColumnWidth
                     height: root.headerHeight
 
-                    property var allDayEvents: root.getAllDayEvents(modelData.events) 
+                    property var allDayEvents: root.getAllDayEvents(modelData.events)
+                    // highlight if this column's date equals today's date (respects week offset)
+                    property bool isToday: (function() {
+                        const col = root.dateForColumn(index);
+                        const now = new Date(DateTime.clock.date);
+                        return col.getFullYear() === now.getFullYear()
+                            && col.getMonth() === now.getMonth()
+                            && col.getDate() === now.getDate();
+                    })()
 
                     Rectangle {
                         anchors.centerIn: parent
                         width: parent.width - 4
                         height: 40
                         radius: Appearance.rounding.large
-                        color: allDayEvents.length >0 ? Appearance.colors.colPrimaryContainer :Appearance.colors.colSurfaceContainerHigh
+                        color: allDayEvents.length > 0 ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSurfaceContainerHigh
 
-                        StyledText {
-                            id: dayTitle
+                        Column {
                             anchors.centerIn: parent
-                            font.weight: Font.Medium
-                            color: Appearance.colors.colOnSurfaceVariant
-                            text: modelData.name
-                            elide: Text.ElideRight
-                          }
-                            
-                         HoverHandler {
-                                        id: allDayHover
-                          }
-        
+                            spacing: 2
 
-                         Column {
+                            StyledText {
+                                id: dayTitle
+                                font.weight: Font.Medium
+                                color: Appearance.colors.colOnSurfaceVariant
+                                text: modelData.name
+                                elide: Text.ElideRight
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+
+                            StyledText {
+                                id: dayDate
+                                font.weight: Font.Normal
+                                color: Appearance.colors.colOnSurfaceVariant
+                                text: {
+                                    let dateObj = root.dateForColumn(index);
+                                    Qt.formatDate(dateObj, "dd MMM")
+                                }
+                                font.pixelSize: dayTitle.font.pixelSize * 0.85
+                                horizontalAlignment: Text.AlignHCenter
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                        }
+
+                        HoverHandler {
+                            id: allDayHover
+                        }
+
+                        Column {
                             anchors.horizontalCenter: parent.horizontalCenter
                             width: parent.width - 4
                             spacing: root.allDayChipSpacing
@@ -306,9 +385,7 @@ Item {
                                 delegate: Rectangle {
                                     width: parent.width
                                     height: root.allDayChipHeight
-                                    color: 'transparent' 
-
-                                   
+                                    color: 'transparent'
 
                                     ToolTip {
                                         visible: allDayHover.hovered
@@ -316,12 +393,11 @@ Item {
                                         timeout: 0
                                         text: root.formatEventTooltip(modelData)
                                     }
-
                                 }
                             }
                         }
                     }
-                    }
+                }
             }
         }
 
@@ -335,17 +411,74 @@ Item {
             Layout.bottomMargin: 8
         }
 
-        // TODO: replace or check for StyledScrollBar
+        // StyledFlickable with calendar grid
         StyledFlickable {
             id: styledFlickable
             Layout.fillWidth: true
             Layout.fillHeight: true
-
+            flickableDirection: Flickable.VerticalFlick
             clip: true
-            contentWidth: width
+            // Set contentWidth to match the calculated total content width
+            contentWidth: root.totalContentWidth
             contentHeight: root.contentHeight
             topMargin: 20
             bottomMargin: 20
+
+            // Background grid (placed before content to ensure it's behind events)
+            Item {
+                id: gridBackground
+                width: eventsRow.width
+                height: contentRow.height
+                x: timeColumn.width + root.spacing
+                z: -10
+
+                // Hour grid lines (horizontal)
+                Repeater {
+                    model: root.totalSlots
+                    Rectangle {
+                        x: 0
+                        y: index * root.slotHeight
+                        width: parent.width
+                        height: 1
+                        color: Appearance.colors.colOutlineVariant
+                        opacity: 0.6
+                    }
+                }
+
+                // Vertical grid lines (one per day column)
+                Row {
+                    spacing: root.spacing
+                    
+                    Repeater {
+                        model: root.days ? root.days.length : 0
+                        delegate: Item {
+                            width: root.dayColumnWidth
+                            height: gridBackground.height
+                            
+                            // Left border of each day column
+                            Rectangle {
+                                x: 0
+                                y: 0
+                                width: 1
+                                height: parent.height
+                                color: Appearance.colors.colOutlineVariant
+                                opacity: 0.7
+                            }
+                            
+                            // Right border of the last column
+                            Rectangle {
+                                visible: index === (root.days ? root.days.length - 1 : 0)
+                                x: parent.width
+                                y: 0
+                                width: 1
+                                height: parent.height
+                                color: Appearance.colors.colOutlineVariant
+                                opacity: 0.7
+                            }
+                        }
+                    }
+                }
+            }
 
             Row {
                 id: contentRow
@@ -394,7 +527,14 @@ Item {
                             width: root.dayColumnWidth
                             height: parent.height
                             clip: true
-                            property bool isToday: index === root.currentDayIndex
+                            // highlight if this column's date equals today's date (respects week offset)
+                            property bool isToday: (function() {
+                                const col = root.dateForColumn(index);
+                                const now = new Date(DateTime.clock.date);
+                                return col.getFullYear() === now.getFullYear()
+                                    && col.getMonth() === now.getMonth()
+                                    && col.getDate() === now.getDate();
+                            })()
                             property var timedEvents: root.getTimedEvents(modelData.events)
 
                             Rectangle {
@@ -434,6 +574,57 @@ Item {
 
                                     HoverHandler {
                                         id: eventHover
+                                    }
+                                    Row {
+                                        anchors.bottom: parent.bottom
+                                        anchors.right: parent.right
+                                        anchors.margins: 4
+                                        spacing: 4
+
+                                        RippleButton {
+                                            width: 28
+                                            height: 28
+                                            buttonRadius: Appearance.rounding.large
+                                            opacity: eventHover.hovered ? 1 : 0
+                                            visible: opacity > 0
+
+                                            colBackgroundHover: Appearance.colors.colSurfaceContainerHigh
+
+                                            Behavior on opacity { NumberAnimation { duration: 120 } }
+
+                                            contentItem: MaterialSymbol {
+                                                anchors.fill: parent
+                                                horizontalAlignment: Text.AlignHCenter
+                                                font.pixelSize: Appearance.font.pixelSize.title
+                                                text: "edit"
+                                            }
+
+                                            onClicked: {
+                                                root.tempCalendarEvent = modelData;
+                                                root.editMode = true;
+                                            }
+                                        }
+
+                                        RippleButton {
+                                            width: 28
+                                            height: 28
+                                            buttonRadius: Appearance.rounding.large
+                                            opacity: eventHover.hovered ? 1 : 0
+                                            visible: opacity > 0
+
+                                            colBackgroundHover: Appearance.colors.colSurfaceContainerHigh
+
+                                            Behavior on opacity { NumberAnimation { duration: 120 } }
+
+                                            contentItem: MaterialSymbol {
+                                                anchors.fill: parent
+                                                horizontalAlignment: Text.AlignHCenter
+                                                font.pixelSize: Appearance.font.pixelSize.title
+                                                text: "cancel"
+                                            }
+
+                                            onClicked: CalendarService.removeItem(modelData)
+                                        }
                                     }
 
                                     ToolTip {
@@ -521,5 +712,125 @@ Item {
                 }
             }
         }
+    }
+    Row {
+        spacing: 10
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        anchors.margins: 16
+
+        RippleButton {
+            width: 50
+            height: 50
+            buttonRadius: Appearance.rounding.full
+            colBackground: Appearance.colors.colPrimary
+            colBackgroundHover: Appearance.colors.colPrimaryHover
+            anchors.verticalCenter: parent.verticalCenter
+
+            onClicked: CalendarService.previousWeek();
+
+            contentItem: MaterialSymbol {
+                anchors.centerIn: parent
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: Appearance.font.pixelSize.title * 1.5
+                color: Appearance.colors.colOnPrimary
+                text: "chevron_left"
+            }
+        }
+
+        RippleButton {
+            width: 50
+            height: 50
+            buttonRadius: Appearance.rounding.full
+            colBackground: Appearance.colors.colPrimary
+            colBackgroundHover: Appearance.colors.colPrimaryHover
+            anchors.verticalCenter: parent.verticalCenter
+
+            onClicked: CalendarService.nextWeek();
+
+            contentItem: MaterialSymbol {
+                anchors.centerIn: parent
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: Appearance.font.pixelSize.title * 1.5
+                color: Appearance.colors.colOnPrimary
+                text: "chevron_right"
+            }
+        }
+
+        RippleButton {
+            width: 50
+            height: 50
+            buttonRadius: Appearance.rounding.full
+            colBackground: Appearance.colors.colPrimary
+            colBackgroundHover: Appearance.colors.colPrimaryHover
+            anchors.verticalCenter: parent.verticalCenter
+
+            onClicked: CalendarService.syncCalendars();
+
+            contentItem: MaterialSymbol {
+                anchors.centerIn: parent
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: Appearance.font.pixelSize.title * 1.5
+                color: Appearance.colors.colOnPrimary
+                text: "sync"
+            }
+        }
+
+        RippleButton {
+            width: 65
+            height: 65
+            buttonRadius: Appearance.rounding.normal
+            colBackground: Appearance.colors.colPrimary
+            colBackgroundHover: Appearance.colors.colPrimaryHover
+            anchors.leftMargin: 20
+
+            onClicked: root.addMode = true;
+
+            contentItem: MaterialSymbol {
+                anchors.centerIn: parent
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: Appearance.font.pixelSize.title * 1.5
+                color: Appearance.colors.colOnPrimary
+                text: "add"
+            }
+        }
+    }
+
+
+    // Loading overlay when CalendarService.isLoading is true
+    Rectangle {
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.52)
+        radius: Appearance.rounding.large
+        visible: CalendarService.isLoading
+        z: 50
+        opacity: visible ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 180 } }
+
+        StyledBusyIndicator {
+            anchors.centerIn: parent
+            running: CalendarService.isLoading
+            implicitSize: 120
+            strokeWidth: 8
+            internalStrokeWidth: 8
+            z: 51
+        }
+
+        MouseArea { anchors.fill: parent }
+    }
+
+    CalendarAdd {
+        id: calendarAddComponent
+        anchors.fill: parent
+        editMode: root.addMode
+        z: 100
+    }
+
+    CalendarEdit {
+        id: calendarEditComponent
+        anchors.fill: parent
+        editMode: root.editMode
+        event: root.tempCalendarEvent
+        z: 100
     }
 }

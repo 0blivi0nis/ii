@@ -279,6 +279,11 @@ Singleton {
                 property int suspend: 3
             }
 
+            property JsonObject calendar: JsonObject {
+                property bool useVdirsyncer: false
+                property real syncInterval: 15 // minutes
+            }
+
             property JsonObject cheatsheet: JsonObject {
                 // Use a nerdfont to see the icons
                 // 0: 󰖳  | 1: 󰌽 | 2: 󰘳 | 3:  | 4: 󰨡

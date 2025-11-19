@@ -166,7 +166,7 @@ Scope { // Scope
                         }
 
                         CheatsheetKeybinds {}
-                        CheatsheetTimetable {}
+                        CalendarWidgetGroup {}
                         CheatsheetPeriodicTable {}
                     }
                 }
