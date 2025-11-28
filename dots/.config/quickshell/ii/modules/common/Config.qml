@@ -290,6 +290,8 @@ Singleton {
             property JsonObject calendar: JsonObject {
                 property bool useVdirsyncer: false
                 property real syncInterval: 15 // minutes
+                property string locale: "en-GB"
+                property bool force2CharDayOfWeek: true
             }
 
             property JsonObject cheatsheet: JsonObject {
@@ -599,10 +601,13 @@ Singleton {
             }
 
             property JsonObject waffles: JsonObject {
-                // Animations on Windoes are kinda janky. Setting the following to
+                // Some spots are kinda janky/awkward. Setting the following to
                 // false will make (some) stuff also be like that for accuracy. 
                 // Example: the right-click menu of the Start button
-                property bool smootherAnimations: true
+                property JsonObject tweaks: JsonObject {
+                    property bool smootherMenuAnimations: true
+                    property bool switchHandlePositionFix: true
+                }
                 property JsonObject bar: JsonObject {
                     property bool bottom: true
                     property bool leftAlignApps: false
