@@ -310,6 +310,8 @@ Item { // Bar content region
                     //    color: rightSidebarButton.colText
                     //}
                     BluetoothIndicator {
+                        Layout.leftMargin: indicatorsRowLayout.realSpacing
+                        visible: BluetoothStatus.available
                     }
                     Revealer {
                         reveal: Notifications.silent || Notifications.unread > 0
