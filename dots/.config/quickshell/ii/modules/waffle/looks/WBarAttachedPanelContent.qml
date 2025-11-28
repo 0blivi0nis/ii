@@ -25,6 +25,10 @@ Item {
     implicitHeight: borderRect.implicitHeight
     implicitWidth: borderRect.implicitWidth
 
+    WRectangularShadow {
+        target: borderRect
+    }
+
     Rectangle {
         id: borderRect
         z: 1
@@ -83,6 +87,8 @@ Item {
         z: 0
         anchors.fill: borderRect
         anchors.margins: borderRect.border.width
+        implicitWidth: contentItem.implicitWidth
+        implicitHeight: contentItem.implicitHeight
         layer.enabled: true
         layer.effect: OpacityMask {
             maskSource: Rectangle {
