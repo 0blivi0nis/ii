@@ -18,6 +18,7 @@ Singleton {
     readonly property real hardMaxValue: 1.50 // People keep joking about setting volume to 5172% so...
     property string audioTheme: Config.options.sounds.theme
     property real value: sink?.audio.volume ?? 0
+    
     function friendlyDeviceName(node) {
         return (node.nickname || node.description || Translation.tr("Unknown"));
     }
