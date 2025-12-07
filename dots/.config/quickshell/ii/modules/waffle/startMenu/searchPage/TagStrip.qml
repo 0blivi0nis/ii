@@ -8,11 +8,12 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.waffle.looks
+import qs.modules.waffle.startMenu
 
 RowLayout {
     id: root
     property StartMenuContext context
-    
+
     WPanelIconButton {
         implicitWidth: 36
         implicitHeight: 36
@@ -27,6 +28,7 @@ RowLayout {
         orientation: Qt.Horizontal
         spacing: 4
         model: root.context.categories
+        clip: true
         delegate: WBorderedButton {
             id: tagButton
             required property var modelData
@@ -38,7 +40,7 @@ RowLayout {
                 if (modelData.prefix != "") {
                     return LauncherSearch.query.startsWith(modelData.prefix);
                 } else {
-                    return !tagListView.model.some(i => (i.prefix != "" && LauncherSearch.query.startsWith(i.prefix)))
+                    return !tagListView.model.some(i => (i.prefix != "" && LauncherSearch.query.startsWith(i.prefix)));
                 }
             }
             contentItem: Item {
@@ -54,9 +56,27 @@ RowLayout {
         }
     }
     WPanelIconButton {
+        id: optionsButton
         implicitWidth: 36
         implicitHeight: 36
         iconSize: 24
         iconName: "more-horizontal"
+
+        onClicked: accountsMenu.open()
+
+        WMenu {
+            id: accountsMenu
+            x: -accountsMenu.implicitWidth + optionsButton.implicitWidth + 10
+            y: optionsButton.height
+            downDirection: true
+            Action {
+                icon.name: "people-settings"
+                text: Translation.tr("Manage accounts")
+                onTriggered: {
+                    Quickshell.execDetached(["bash", "-c", Config.options.apps.manageUser])
+                    GlobalStates.searchOpen = false;
+                }
+            }
+        }
     }
 }
