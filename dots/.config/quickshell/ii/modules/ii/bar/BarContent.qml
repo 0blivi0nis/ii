@@ -266,6 +266,13 @@ Item { // Bar content region
                         Layout.rightMargin: indicatorsRowLayout.realSpacing
                         color: rightSidebarButton.colText
                     }
+                    MaterialSymbol {
+                        text: "vpn_key"
+                        visible: Network.vpnEnabled
+                        iconSize: Appearance.font.pixelSize.larger
+                        color: rightSidebarButton.colText
+                        Layout.rightMargin: indicatorsRowLayout.realSpacing
+                    }
                     Revealer {
                         reveal: Audio.sink?.audio?.muted ?? false
                         Layout.fillHeight: true
