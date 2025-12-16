@@ -11,12 +11,12 @@ import Quickshell.Hyprland
 QuickToggleButton {
     toggled: Network.vpnEnabled
     buttonIcon: "vpn_lock_2"
-    onClicked: Network.updateVpnList()
+    onClicked: Network.toggleVpnConnection(Config.options.vpn.defaultVpn, Network.vpnEnabled)
     altAction: () => {
         Quickshell.execDetached(["bash", "-c", `${Network.ethernet ? Config.options.apps.networkEthernet : Config.options.apps.network}`])
         GlobalStates.sidebarRightOpen = false
     }
     StyledToolTip {
-        text: Translation.tr("VPN %1 | Right-click to configure").arg(Network.vpnEnabled ? Translation.tr("enabled") : Translation.tr("disabled"))
+        text: Translation.tr("%1 | Right-click to configure").arg(Network.vpnEnabled ? Translation.tr("enabled") : Translation.tr("disabled"))
     }
 }
