@@ -65,7 +65,7 @@ Item {
 
         WindowDialogParagraph {
             Layout.fillWidth: true
-            horizontalAlignment: Text.AlignLeft
+            horizontalAlignment: Text.AlignHCenter
             text: PolkitService.cleanMessage
         }
 

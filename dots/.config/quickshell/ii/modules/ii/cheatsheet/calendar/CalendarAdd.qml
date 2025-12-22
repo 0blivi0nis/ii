@@ -10,7 +10,7 @@ import Quickshell.Io
 Rectangle {
     id: root
 
-    property bool is24Hour: ((Config.options?.time?.format ?? "").toString().toUpperCase().includes("ap") === false)
+    property bool is24Hour: ((Config.options?.time?.format ?? "").toString().toUpperCase().includes("AP") === false)
 
     required property bool editMode
 
@@ -183,8 +183,8 @@ Rectangle {
                         const title = eventTitleInput.text.trim();
                         const dateStr = eventDateInput.text.trim();
                         // Use the selected start/end times from this dialog (not missing inputs)
-                        const startStr = startTime;
-                        const endStr = endTime;
+                        const startStr = String(startHour).padStart(2, '0') + ":" + String(startMinute).padStart(2, '0');
+                        const endStr = String(endHour).padStart(2, '0') + ":" + String(endMinute).padStart(2, '0');
                         
                         if (!title) {
                             console.error("Event title is required");

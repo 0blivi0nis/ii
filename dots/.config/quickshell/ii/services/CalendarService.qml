@@ -353,11 +353,6 @@ Singleton {
         else syncCalendars()
     }
 
-    Process {
-        id: khalEditProcess
-        running: false
-    }
-
     function editItem(uid, item) {
         root.isLoading = true
         // console.log("[CalendarService] editItem called uid=", uid, "item=", item)
@@ -367,33 +362,9 @@ Singleton {
             return false
         }
 
-        let title = item.content
-        let formattedDate
-
-        if (item.date) {
-            const parts = item.date.split('-')
-            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`
-        } else {
-            formattedDate = Qt.formatDate(new Date(), "dd/MM/yyyy")
-        }
-
-        let cmd = ["khal", "edit", "--show-past", uid]
-
-        if (!item.allDay && item.start) {
-            cmd.push(`${formattedDate} ${item.start}`)
-            if (item.end) {
-                cmd.push(`${item.end}`)
-            }
-        } else {
-            cmd.push(formattedDate)
-        }
-
-        cmd.push(title)
-        // console.log("[CalendarService] editItem command:", cmd.join(' '))
-        khalEditProcess.command = cmd
-        khalEditProcess.running = true
-        if (Config.options.calendar.useVdirsyncer) syncProcess.running = true
-        else syncCalendars()
+        // khal edit is interactive, so we simulate editing by removing and re-adding
+        removeItem({ uid: uid })
+        addItem(item)
         return true
     }
 
@@ -406,6 +377,11 @@ Singleton {
 
     function previousWeek() {
         root.currentWeekOffset -= 1
+        root.eventsInWeek = root.getEventsInWeekWithOffset(root.currentWeekOffset)
+    }
+
+    function jumpToCurrentWeek() {
+        root.currentWeekOffset = 0
         root.eventsInWeek = root.getEventsInWeekWithOffset(root.currentWeekOffset)
     }
 

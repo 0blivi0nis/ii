@@ -11,6 +11,7 @@ import qs.modules.ii.background
 import qs.modules.ii.bar
 import qs.modules.ii.cheatsheet
 import qs.modules.ii.dock
+import qs.modules.ii.displayMode
 import qs.modules.ii.lock
 import qs.modules.ii.mediaControls
 import qs.modules.ii.notificationPopup
@@ -26,6 +27,7 @@ import qs.modules.ii.sidebarRight
 import qs.modules.ii.overlay
 import qs.modules.ii.verticalBar
 import qs.modules.ii.wallpaperSelector
+import qs.modules.ii.wrappedFrame
 
 import qs.modules.waffle.actionCenter
 import qs.modules.waffle.background
@@ -67,6 +69,7 @@ ShellRoot {
     PanelLoader { identifier: "iiBackground"; component: Background {} }
     PanelLoader { identifier: "iiCheatsheet"; component: Cheatsheet {} }
     PanelLoader { identifier: "iiDock"; extraCondition: Config.options.dock.enable; component: Dock {} }
+    PanelLoader { identifier: "iiDisplayMode"; component: DisplayMode {} }
     PanelLoader { identifier: "iiLock"; component: Lock {} }
     PanelLoader { identifier: "iiMediaControls"; component: MediaControls {} }
     PanelLoader { identifier: "iiNotificationPopup"; component: NotificationPopup {} }
@@ -82,6 +85,7 @@ ShellRoot {
     PanelLoader { identifier: "iiSidebarRight"; component: SidebarRight {} }
     PanelLoader { identifier: "iiVerticalBar"; extraCondition: Config.options.bar.vertical; component: VerticalBar {} }
     PanelLoader { identifier: "iiWallpaperSelector"; component: WallpaperSelector {} }
+    PanelLoader { identifier: "iiWrappedFrame"; component: WrappedFrame {} }
 
     PanelLoader { identifier: "wActionCenter"; component: WaffleActionCenter {} }
     PanelLoader { identifier: "wBar"; component: WaffleBar {} }
@@ -93,7 +97,36 @@ ShellRoot {
     PanelLoader { identifier: "wStartMenu"; component: WaffleStartMenu {} }
     PanelLoader { identifier: "wSessionScreen"; component: WaffleSessionScreen {} }
     PanelLoader { identifier: "wTaskView"; component: WaffleTaskView {} }
+    
     ReloadPopup {}
+
+
+    //! A better aproach would be better 
+    //? We are resettings the bar (and vertical bar) when we change any settings related to bar position or wrapped frame options
+    property int screenRounding: Config.options.appearance.fakeScreenRounding
+    property bool barBottom: Config.options.bar.bottom
+    property bool barVertical: Config.options.bar.vertical
+    onBarBottomChanged: updateWrappedFrame()
+    onBarVerticalChanged: updateWrappedFrame()
+    onScreenRoundingChanged: updateWrappedFrame()
+    
+    function updateWrappedFrame() {
+        if (screenRounding === 3) { // Wrapped enabled
+            let currentPanels = Array.from(Config.options.enabledPanels);
+            let barExists = currentPanels.indexOf("iiBar") !== -1;
+            let vBarExists = currentPanels.indexOf("iiVerticalBar") !== -1;
+
+            let filtered = currentPanels.filter(panel => panel !== "iiBar" && panel !== "iiVerticalBar");
+            Config.options.enabledPanels = filtered;
+
+            Qt.callLater(() => {
+                let restored = Array.from(Config.options.enabledPanels);
+                if (barExists) restored.push("iiBar");
+                if (vBarExists) restored.push("iiVerticalBar");
+                Config.options.enabledPanels = restored;
+            })
+        }
+    }
 
     component PanelLoader: LazyLoader {
         required property string identifier
@@ -104,7 +137,7 @@ ShellRoot {
     // Panel families
     property list<string> families: ["ii", "waffle"]
     property var panelFamilies: ({
-        "ii": ["iiBar", "iiBackground", "iiCheatsheet", "iiDock", "iiLock", "iiMediaControls", "iiNotificationPopup", "iiOnScreenDisplay", "iiOnScreenKeyboard", "iiOverlay", "iiOverview", "iiPolkit", "iiRegionSelector", "iiScreenCorners", "iiSessionScreen", "iiSidebarLeft", "iiSidebarRight", "iiVerticalBar", "iiWallpaperSelector"],
+        "ii": ["iiBar", "iiBackground", "iiCheatsheet", "iiDock", "iiDisplayMode", "iiLock", "iiMediaControls", "iiNotificationPopup", "iiOnScreenDisplay", "iiOnScreenKeyboard", "iiOverlay", "iiOverview", "iiPolkit", "iiRegionSelector", "iiScreenCorners", "iiSessionScreen", "iiSidebarLeft", "iiSidebarRight", "iiVerticalBar", "iiWallpaperSelector", "iiWrappedFrame"],
         "waffle": ["wActionCenter", "wBar", "wBackground", "wLock", "wNotificationCenter", "wOnScreenDisplay", "wTaskView", "wPolkit", "wSessionScreen", "wStartMenu", "iiCheatsheet", "iiNotificationPopup", "iiOnScreenKeyboard", "iiOverlay", "iiRegionSelector", "iiWallpaperSelector"],
     })
     function cyclePanelFamily() {
@@ -129,4 +162,3 @@ ShellRoot {
         onPressed: root.cyclePanelFamily()
     }
 }
-

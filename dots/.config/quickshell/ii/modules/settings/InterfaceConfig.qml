@@ -752,6 +752,7 @@ ContentPage {
         }
         ConfigRow {
             uniform: true
+            visible: Config.options.overview.enable
             ConfigSelectionArray {
                 currentValue: Config.options.overview.orderRightLeft
                 onSelected: newValue => {

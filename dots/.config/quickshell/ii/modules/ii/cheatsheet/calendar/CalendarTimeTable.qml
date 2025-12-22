@@ -291,6 +291,20 @@ Item {
                         anchors.centerIn: parent
                         spacing: 8
 
+                        RippleButton {
+                            buttonRadius: Appearance.rounding.full
+                            width: 70
+                            height: 35
+                            onClicked: CalendarService.jumpToCurrentWeek()
+                            colBackground: Appearance.colors.colSurfaceContainerHigh
+                            contentItem: MaterialSymbol {
+                                anchors.centerIn: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                font.pixelSize: Appearance.font.pixelSize.title
+                                text: "today"
+                            }
+                        }
+
                         // RippleButton {
                         //     buttonRadius: Appearance.rounding.full
                         //     width: 35

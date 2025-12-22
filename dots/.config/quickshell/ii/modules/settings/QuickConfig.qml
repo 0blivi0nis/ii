@@ -321,11 +321,27 @@ ContentPage {
                             displayName: Translation.tr("When not fullscreen"),
                             icon: "fullscreen_exit",
                             value: 2
+                        },
+                        {
+                            displayName: Translation.tr("Wrapped"),
+                            icon: "capture",
+                            value: 3
                         }
                     ]
                 }
             }
-            
+        }
+        ConfigSpinBox {
+            visible: Config.options.appearance.fakeScreenRounding === 3
+            icon: "line_weight"
+            text: Translation.tr("Wrapped frame thickness")
+            value: Config.options.appearance.wrappedFrameThickness
+            from: 5
+            to: 25
+            stepSize: 1
+            onValueChanged: {
+                Config.options.appearance.wrappedFrameThickness = value;
+            }
         }
     }
 

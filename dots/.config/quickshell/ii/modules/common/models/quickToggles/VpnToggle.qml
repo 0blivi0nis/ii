@@ -11,6 +11,6 @@ QuickToggleModel {
     icon: "vpn_lock"
 
     toggled: Network.vpnEnabled
-    mainAction: Network.toggleVpnConnection(Config.options.vpn.defaultVpn, Network.vpnEnabled)
+    mainAction: function() { Network.toggleVpnConnection(Config.options.vpn.defaultVpn, Network.vpnEnabled); }
     hasMenu: true
 }

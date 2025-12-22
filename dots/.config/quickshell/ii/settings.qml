@@ -50,9 +50,19 @@ ApplicationWindow {
             component: "modules/settings/InterfaceConfig.qml"
         },
         {
+            name: Translation.tr("Display"),
+            icon: "desktop_windows",
+            component: "modules/settings/DisplayConfig.qml"
+        },
+        {
             name: Translation.tr("Services"),
             icon: "settings",
             component: "modules/settings/ServicesConfig.qml"
+        },
+        {
+            name: Translation.tr("Security"),
+            icon: "fingerprint",
+            component: "modules/settings/SecurityConfig.qml"
         },
         {
             name: Translation.tr("Advanced"),
