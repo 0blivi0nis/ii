@@ -57,6 +57,7 @@ post_process() {
 
     handle_kde_material_you_colors &
     "$SCRIPT_DIR/code/material-code-set-color.sh" &
+    "$SCRIPT_DIR/code/material-icon-set-color.sh" &
 }
 
 check_and_prompt_upscale() {
