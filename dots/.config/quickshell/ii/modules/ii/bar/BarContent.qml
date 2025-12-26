@@ -357,6 +357,24 @@ Item { // Bar content region
             //    }
             //}
 
+            // Crypto
+            Loader {
+                Layout.leftMargin: 4
+                active: Config.options.bar.crypto.enable
+                sourceComponent: Row {
+                    spacing: 4
+                    Repeater {
+                        model: Crypto.coinModel
+                        delegate: BarGroup {
+                            CryptoWidget {
+                                imageUrl: model.imageUrl
+                                symbol: model.symbol
+                                price: model.price
+                            }
+                        }
+                    }
+                }
+            }
             // PrayerTime
             Loader {
                 Layout.leftMargin: 4
