@@ -6,7 +6,7 @@ import qs.modules.common.widgets
 
 QuickToggleModel {
     name: Translation.tr("VPN")
-    statusText: Network.vpnEnabled ? Translation.tr("enabled") : Translation.tr("disabled")
+    statusText: Network.vpnEnabled ? Translation.tr("Enabled") : Translation.tr("Disabled")
     tooltipText: Translation.tr("%1 | Right-click to configure").arg(Network.vpnEnabled ? Translation.tr("enabled") : Translation.tr("disabled"))
     icon: "vpn_lock"
 
