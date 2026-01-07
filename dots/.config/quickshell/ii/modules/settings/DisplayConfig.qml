@@ -165,6 +165,9 @@ ContentPage {
                                     });
                                 }
                             }
+                            Item {
+                                Layout.fillWidth: true
+                            }
                             RippleButtonWithIcon {
                                 materialIcon: "center_focus_strong"
                                 mainText: Translation.tr("Focus")

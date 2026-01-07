@@ -220,7 +220,6 @@ Singleton {
             property string monospace: Config.options.appearance.fonts.monospace
             property string reading: Config.options.appearance.fonts.reading
             property string expressive: Config.options.appearance.fonts.expressive
-            property string clock: "PP Neue Machina"
         }
         property QtObject variableAxes: QtObject {
             property var main: ({
@@ -386,7 +385,7 @@ Singleton {
         property real mediaControlsWidth: 440
         property real mediaControlsHeight: 160
         property real notificationPopupWidth: 410
-        property real osdWidth: 180
+        property real osdWidth: 200
         property real searchWidthCollapsed: 210
         property real searchWidth: 360
         property real sidebarWidth: 460

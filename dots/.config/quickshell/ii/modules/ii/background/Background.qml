@@ -105,8 +105,15 @@ Variants {
             stdout: StdioCollector {
                 id: wallpaperSizeOutputCollector
                 onStreamFinished: {
-                    const output = wallpaperSizeOutputCollector.text;
+                    const output = wallpaperSizeOutputCollector.text.trim();
+                    if (output.length === 0) return;
+
                     const [width, height] = output.split(" ").map(Number);
+
+                    if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                        return;
+                    }
+
                     const [screenWidth, screenHeight] = [bgRoot.screen.width, bgRoot.screen.height];
                     bgRoot.wallpaperWidth = width;
                     bgRoot.wallpaperHeight = height;
@@ -174,8 +181,8 @@ Variants {
                     }
                 }
                 sourceSize {
-                    width: bgRoot.screen.width * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale
-                    height: bgRoot.screen.height * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale
+                    width: Math.min(bgRoot.wallpaperWidth, bgRoot.screen.width * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale)
+                    height: Math.min(bgRoot.wallpaperHeight, bgRoot.screen.height * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale)
                 }
                 width: bgRoot.wallpaperWidth / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale
                 height: bgRoot.wallpaperHeight / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale

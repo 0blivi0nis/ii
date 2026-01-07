@@ -14,96 +14,131 @@ import Quickshell.Hyprland
 Scope {
     id: overviewScope
     property bool dontAutoCancelSearch: false
+    property string position: Config.options.overview.position
+    Variants {
+        id: overviewVariants
+        model: Quickshell.screens
+        PanelWindow {
+            id: root
+            required property var modelData
+            property string searchingText: ""
+            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.screen)
+            property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
+            screen: modelData
+            visible: GlobalStates.overviewOpen && (!Config.options.overview.showOnlyOnFocusedMonitor || monitorIsFocused)
 
-    PanelWindow {
-        id: panelWindow
-        property string searchingText: ""
-        readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
-        property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
-        visible: GlobalStates.overviewOpen
+            WlrLayershell.namespace: "quickshell:overview"
+            WlrLayershell.layer: WlrLayer.Overlay
+            // WlrLayershell.keyboardFocus: GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            color: "transparent"
 
-        WlrLayershell.namespace: "quickshell:overview"
-        WlrLayershell.layer: WlrLayer.Top
-        // WlrLayershell.keyboardFocus: GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-        color: "transparent"
-
-        mask: Region {
-            item: GlobalStates.overviewOpen ? columnLayout : null
-        }
-
-        anchors {
-            top: true
-            bottom: true
-            left: true
-            right: true
-        }
-
-        Connections {
-            target: GlobalStates
-            function onOverviewOpenChanged() {
-                if (!GlobalStates.overviewOpen) {
-                    searchWidget.disableExpandAnimation();
-                    overviewScope.dontAutoCancelSearch = false;
-                    GlobalFocusGrab.dismiss();
-                } else {
-                    if (!overviewScope.dontAutoCancelSearch) {
-                        searchWidget.cancelSearch();
-                    }
-                    GlobalFocusGrab.addDismissable(panelWindow);
-                }
+            mask: Region {
+                item: GlobalStates.overviewOpen ? gridLayout : null
             }
-        }
 
-        Connections {
-            target: GlobalFocusGrab
-            function onDismissed() {
-                GlobalStates.overviewOpen = false;
-            }
-        }
-        implicitWidth: columnLayout.implicitWidth
-        implicitHeight: columnLayout.implicitHeight
-
-        function setSearchingText(text) {
-            searchWidget.setSearchingText(text);
-            searchWidget.focusFirstItem();
-        }
-
-        Column {
-            id: columnLayout
-            visible: GlobalStates.overviewOpen
             anchors {
-                horizontalCenter: parent.horizontalCenter
-                top: parent.top
+                top: true
+                bottom: true
+                left: true
+                right: true
             }
-            spacing: -8
 
-            Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape) {
-                    GlobalStates.overviewOpen = false;
-                } else if (event.key === Qt.Key_Left) {
-                    if (!panelWindow.searchingText)
-                        Hyprland.dispatch("workspace r-1");
-                } else if (event.key === Qt.Key_Right) {
-                    if (!panelWindow.searchingText)
-                        Hyprland.dispatch("workspace r+1");
+            HyprlandFocusGrab {
+                id: grab
+                windows: [root]
+                property bool canBeActive: root.monitorIsFocused
+                active: false
+                onCleared: () => {
+                    if (!active)
+                        GlobalStates.overviewOpen = false;
                 }
             }
 
-            SearchWidget {
-                id: searchWidget
-                anchors.horizontalCenter: parent.horizontalCenter
-                Synchronizer on searchingText {
-                    property alias source: panelWindow.searchingText
+            Connections {
+                target: GlobalStates
+                function onOverviewOpenChanged() {
+                    if (!GlobalStates.overviewOpen) {
+                        searchWidget.disableExpandAnimation();
+                        overviewScope.dontAutoCancelSearch = false;
+                    } else {
+                        if (!overviewScope.dontAutoCancelSearch) {
+                            searchWidget.cancelSearch();
+                        }
+                        delayedGrabTimer.start();
+                    }
                 }
             }
 
-            Loader {
-                id: overviewLoader
-                anchors.horizontalCenter: parent.horizontalCenter
-                active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
-                sourceComponent: OverviewWidget {
-                    screen: panelWindow.screen
-                    visible: (panelWindow.searchingText == "")
+            Timer {
+                id: delayedGrabTimer
+                interval: Config.options.hacks.arbitraryRaceConditionDelay
+                repeat: false
+                onTriggered: {
+                    if (!grab.canBeActive)
+                        return;
+                    grab.active = GlobalStates.overviewOpen;
+                }
+            }
+
+            implicitWidth: gridLayout.implicitWidth
+            implicitHeight: gridLayout.implicitHeight
+
+            function setSearchingText(text) {
+                searchWidget.setSearchingText(text);
+                searchWidget.focusFirstItem();
+            }
+
+            GridLayout {
+                id: gridLayout
+                visible: GlobalStates.overviewOpen
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    margins: overviewScope.position == "center" ? root.implicitHeight / Config.options.overview.centerTopPaddingRatio : 0
+                }
+                columns: 1
+
+                state: overviewScope.position === "center" ? "top" : overviewScope.position
+                states: [
+                    State {
+                        name: "top"
+                        AnchorChanges { target: gridLayout; anchors.top: parent.top; anchors.bottom: undefined; }
+                    },
+                    State {
+                        name: "bottom" 
+                        AnchorChanges { target: gridLayout; anchors.top: undefined; anchors.bottom: parent.bottom; }
+                    }
+                ]
+
+                Keys.onPressed: event => {
+                    if (event.key === Qt.Key_Escape) {
+                        GlobalStates.overviewOpen = false;
+                    } else if (event.key === Qt.Key_Left) {
+                        if (!root.searchingText)
+                            Hyprland.dispatch("workspace r-1");
+                    } else if (event.key === Qt.Key_Right) {
+                        if (!root.searchingText)
+                            Hyprland.dispatch("workspace r+1");
+                    }
+                }
+
+                SearchWidget {
+                    id: searchWidget
+                    Layout.row: overviewScope.position == "bottom" ? 1 : 0
+                    Layout.alignment: Qt.AlignHCenter
+                    Synchronizer on searchingText {
+                        property alias source: root.searchingText
+                    }
+                }
+
+                Loader {
+                    id: overviewLoader
+                    Layout.row: overviewScope.position == "bottom" ? 0 : 1
+                    Layout.alignment: Qt.AlignHCenter
+                    active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
+                    sourceComponent: OverviewWidget {
+                        panelWindow: root
+                        visible: (root.searchingText == "")
+                    }
                 }
             }
         }
@@ -114,9 +149,15 @@ Scope {
             GlobalStates.overviewOpen = false;
             return;
         }
-        overviewScope.dontAutoCancelSearch = true;
-        panelWindow.setSearchingText(Config.options.search.prefix.clipboard);
-        GlobalStates.overviewOpen = true;
+        for (let i = 0; i < overviewVariants.instances.length; i++) {
+            let panelWindow = overviewVariants.instances[i];
+            if (panelWindow.modelData.name == Hyprland.focusedMonitor.name) {
+                overviewScope.dontAutoCancelSearch = true;
+                panelWindow.setSearchingText(Config.options.search.prefix.clipboard);
+                GlobalStates.overviewOpen = true;
+                return;
+            }
+        }
     }
 
     function toggleEmojis() {
@@ -124,9 +165,15 @@ Scope {
             GlobalStates.overviewOpen = false;
             return;
         }
-        overviewScope.dontAutoCancelSearch = true;
-        panelWindow.setSearchingText(Config.options.search.prefix.emojis);
-        GlobalStates.overviewOpen = true;
+        for (let i = 0; i < overviewVariants.instances.length; i++) {
+            let panelWindow = overviewVariants.instances[i];
+            if (panelWindow.modelData.name == Hyprland.focusedMonitor.name) {
+                overviewScope.dontAutoCancelSearch = true;
+                panelWindow.setSearchingText(Config.options.search.prefix.emojis);
+                GlobalStates.overviewOpen = true;
+                return;
+            }
+        }
     }
 
     IpcHandler {
