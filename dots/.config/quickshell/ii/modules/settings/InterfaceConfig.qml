@@ -350,6 +350,15 @@ ContentPage {
         icon: "screenshot_frame_2"
         title: Translation.tr("Region selector (screen snipping/Google Lens)")
 
+        ConfigSwitch {
+            buttonIcon: "monitor"
+            text: Translation.tr('Show only on focused monitor')
+            checked: Config.options.regionSelector.showOnlyOnFocusedMonitor
+            onCheckedChanged: {
+                Config.options.regionSelector.showOnlyOnFocusedMonitor = checked;
+            }
+        }
+
         ContentSubsection {
             title: Translation.tr("Hint target regions")
             ConfigRow {
@@ -695,12 +704,63 @@ ContentPage {
         icon: "overview_key"
         title: Translation.tr("Overview")
 
+        ConfigRow {
+            ConfigSwitch {
+                buttonIcon: "check"
+                text: Translation.tr("Enable")
+                Layout.fillWidth: false
+                checked: Config.options.overview.enable
+                onCheckedChanged: {
+                    Config.options.overview.enable = checked;
+                }
+            }
+            Item {
+                Layout.fillWidth: true
+            }
+            ConfigSelectionArray {
+                Layout.fillWidth: false
+                currentValue: Config.options.overview.position
+                onSelected: newValue => {
+                    Config.options.overview.position = newValue;
+                }
+                options: [
+                    {
+                        displayName: Translation.tr("Top"),
+                        icon: "align_flex_start",
+                        value: "top"
+                    },
+                    {
+                        displayName: Translation.tr("Center"),
+                        icon: "align_flex_center",
+                        value: "center"
+                    },
+                    {
+                        displayName: Translation.tr("Bottom"),
+                        icon: "align_flex_end",
+                        value: "bottom"
+                    }
+                ]
+            }
+        }
+        ConfigSpinBox {
+            icon: "border_top"
+            text: Translation.tr("Center top padding ration")
+            value: Config.options.overview.centerTopPaddingRatio
+            from: 1
+            to: 10
+            stepSize: 1
+            visible: Config.options.overview.enable
+            onValueChanged: {
+                Config.options.overview.centerTopPaddingRatio = value;
+            }
+        }
         ConfigSwitch {
-            buttonIcon: "check"
-            text: Translation.tr("Enable")
-            checked: Config.options.overview.enable
+            buttonIcon: "monitor"
+            text: Translation.tr("Show only on focused monitor")
+            checked: Config.options.overview.showOnlyOnFocusedMonitor
+            visible: Config.options.overview.enable
             onCheckedChanged: {
-                Config.options.overview.enable = checked;
+                Config.options.overview.showOnlyOnFocusedMonitor = checked;
             }
         }
         ConfigSwitch {
