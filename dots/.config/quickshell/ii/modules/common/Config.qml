@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.services
 import qs.modules.common.functions
 
 Singleton {
@@ -225,6 +226,9 @@ Singleton {
             }
 
             property JsonObject bar: JsonObject {
+                property JsonObject activeWindow: JsonObject {
+                    property bool fixedSize: false
+                }
                 property JsonObject autoHide: JsonObject {
                     property bool enable: false
                     property int hoverRegionWidth: 2
@@ -239,9 +243,13 @@ Singleton {
                 property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
                 property bool borderless: false // true for no grouping of items
                 property string topLeftIcon: "spark" // Options: "distro" or any icon name in ~/.config/quickshell/ii/assets/icons
-                property bool showBackground: true
+                property int barBackgroundStyle: 1 // 0: Transparent | 1: Visible | 2: Adaptive
                 property bool verbose: true
                 property bool vertical: false
+                property JsonObject mediaPlayer: JsonObject {
+                    property bool useCustomSize: false
+                    property int customSize: 300
+                }
                 property JsonObject resources: JsonObject {
                     property bool alwaysShowSwap: true
                     property bool alwaysShowCpu: true
@@ -250,6 +258,10 @@ Singleton {
                     property int cpuWarningThreshold: 90
                 }
                 property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
+                property JsonObject timers: JsonObject {
+                    property bool showPomodoro: true
+                    property bool showStopwatch: true
+                }
                 property JsonObject utilButtons: JsonObject {
                     property bool showScreenSnip: true
                     property bool showColorPicker: false
@@ -266,6 +278,9 @@ Singleton {
                     property bool alwaysShowNumbers: false
                     property int showNumberDelay: 300 // milliseconds
                     property list<string> numberMap: ["1", "2"] // Characters to show instead of numbers on workspace indicator
+                    property bool useWorkspaceMap: false
+                    property list<var> workspaceMap: [0, 10] 
+                    property int maxWindowCount: 5 // Maximum windows to show in one workspace
                     property bool useNerdFont: false
                 }
                 property JsonObject weather: JsonObject {
@@ -280,11 +295,143 @@ Singleton {
                         property bool showUnreadCount: false
                     }
                 }
+                property JsonObject layouts: JsonObject {
+                    // Only adding place-essential components to left-center-right
+                    // And adding the dynamic components to leftover
+                    property list<var> availableComps: [
+                        {
+                            id: "record_indicator", 
+                            icon: "screen_record", 
+                            title: "Record indicator", 
+                            centered: false, // centered or not (only in center section)
+                            visible: false, 
+                            scrollTo: "" // scroll to this component when clicked (has also to be configured in BarConfig)
+                        },
+                        {
+                            id: "screen_share_indicator",
+                            icon: "screen_share",
+                            title: "Screen share indicator",
+                            centered: false,
+                            visible: false,
+                            scrollTo: ""
+                        },
+                        {
+                            id: "date",
+                            icon: "date_range",
+                            title: "Date",
+                            centered: false,
+                            visible: true,
+                            scrollTo: ""
+                        },
+                        {
+                            id: "battery",
+                            icon: "battery_android_6",
+                            title: "Battery",
+                            centered: false,
+                            visible: true,
+                            scrollTo: ""
+                        },
+                        {
+                            id: "timer",
+                            icon: "timer",
+                            title: "Timer & Pomodoro",
+                            centered: false,
+                            visible: true,
+                            scrollTo: "timerAndPomodoro"
+                        },
+                        {
+                            id: "weather",
+                            icon: "weather_mix",
+                            title: "Weather",
+                            centered: false,
+                            visible: true,
+                            scrollTo: ""
+                        },
+                        {
+                            id: "crypto",
+                            icon: "currency_bitcoin",
+                            title: "Crypto",
+                            centered: false,
+                            visible: true,
+                            scrollTo: "crypto"
+                        },
+                        {
+                            id: "prayer",
+                            icon: "Mosque",
+                            title: "Prayers",
+                            centered: false,
+                            visible: true,
+                            scrollTo: ""
+                        },
+                    ]
+                    property list<var> left: [
+                        {
+                            id: "active_window",
+                            icon: "label",
+                            title: "Active window",
+                            centered: false,
+                            visible: true,
+                            scrollTo: "active_window"
+                        },
+                    ]
+                    property list<var> center: [
+                        {
+                            id: "music_player",
+                            icon: "music_note",
+                            title: "Music player",
+                            centered: false,
+                            visible: true,
+                            scrollTo: "music_player"
+                        },
+                        {
+                            id: "workspaces",
+                            icon: "workspaces",
+                            title: "Workspaces",
+                            centered: false,
+                            visible: true,
+                            scrollTo: "workspaces"
+                        },
+                        {
+                            id: "system_monitor",
+                            icon: "monitor_heart",
+                            title: "System monitor",
+                            centered: false,
+                            visible: true,
+                            scrollTo: ""
+                        }
+                    ]
+                    property list<var> right: [
+                        {
+                            id: "utility_buttons",
+                            icon: "build",
+                            title: "Utility buttons",
+                            centered: false,
+                            visible: true,
+                            scrollTo: "utility_buttons"
+                        },
+                        {
+                            id: "clock",
+                            icon: "nest_clock_farsight_analog",
+                            title: "Clock",
+                            centered: false,
+                            visible: true,
+                            scrollTo: ""
+                        },
+                        {
+                            id: "system_tray",
+                            icon: "system_update_alt",
+                            title: "System tray",
+                            centered: false,
+                            visible: true,
+                            scrollTo: "system_tray"
+                        }
+                    ]
+
+                }
                 property JsonObject tooltips: JsonObject {
                     property bool clickToShow: false
                 }
                 property JsonObject crypto: JsonObject {
-                    property bool enable: true
                     property list<string> coins: ["bitcoin"]
                     property bool monochromeIcon: false
                     property int refreshRate: 5 // minutes
@@ -293,6 +440,10 @@ Singleton {
                     property string city: ""
                     property string country: ""
                     property bool enable: false
+                }
+                property JsonObject sizes: JsonObject {
+                    property int height: 40 // horizontal mode
+                    property int width: 46 // vertical mode
                 }
             }
 

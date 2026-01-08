@@ -4,68 +4,106 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
+import QtQml.Models
+
 ContentPage {
+    id: page
     forceWidth: true
 
+    property var componentMap: ({
+        "active_window": activeWindow,
+        "music_player": musicPlayer,
+        "utility_buttons": utilityButtons,
+        "system_tray": systemTray,
+        "workspaces": workspaces,
+        "timerAndPomodoro": timerAndPomodoro,
+        "crypto": crypto,
+    })
+
+    function scrollTo(stringId) {
+        const item = componentMap[stringId]
+        page.contentY = item.y
+    }
+
+
     ContentSection {
-        icon: "currency_bitcoin"
-        title: Translation.tr("Crypto")
-
-        ConfigSwitch {
-            buttonIcon: "check"
-            text: Translation.tr("Enable")
-            checked: Config.options.bar.crypto.enable
-            onCheckedChanged: {
-                Config.options.bar.crypto.enable = checked;
-            }
-        }
-
-        ConfigRow {
-            MaterialTextField {
-                Layout.fillWidth: true
-                placeholderText: Translation.tr("CoinGecko IDs (comma separated, e.g. bitcoin,ethereum)")
-                text: Config.options.bar.crypto.coins.join(",")
-                onEditingFinished: {
-                    Config.options.bar.crypto.coins = text.split(",").map(s => s.trim()).filter(s => s !== "")
+        icon: "mobile_layout"
+        title: Translation.tr("Bar layout")
+        ContentSubsection {
+            title: Translation.tr("Left layout")
+            tooltip: Translation.tr("Top layout in vertical mode")
+            ConfigListView {
+                barSection: 0
+                listModel: Config.options.bar.layouts.left
+                sourceListModel: Config.options.bar.layouts.availableComps
+                onUpdated: (newList) => {
+                    Config.options.bar.layouts.left = newList
+                } 
+                onSourceUpdated: (newList) => {
+                    Config.options.bar.layouts.availableComps = newList
                 }
             }
         }
-
-        ConfigSwitch {
-            buttonIcon: "colors"
-            text: Translation.tr('Tint icons')
-            checked: Config.options.bar.crypto.monochromeIcon
-            onCheckedChanged: {
-                Config.options.bar.crypto.monochromeIcon = checked;
+        ContentSubsection {
+            title: Translation.tr("Center layout")
+            tooltip: Translation.tr("Center the component with the button")
+            ConfigListView {
+                barSection: 1
+                listModel: Config.options.bar.layouts.center
+                sourceListModel: Config.options.bar.layouts.availableComps
+                onUpdated: (newList) => {
+                    Config.options.bar.layouts.center = newList
+                } 
+                onSourceUpdated: (newList) => {
+                    Config.options.bar.layouts.availableComps = newList
+                }
             }
         }
-
-        ConfigSpinBox {
-            icon: "update"
-            text: Translation.tr("Refresh Rate (min)")
-            value: Config.options.bar.crypto.refreshRate
-            from: 1
-            to: 60
-            stepSize: 1
-            onValueChanged: {
-                Config.options.bar.crypto.refreshRate = value;
+        ContentSubsection {
+            title: Translation.tr("Right layout")
+            tooltip: Translation.tr("Bottom layout in vertical mode")
+            ConfigListView {
+                barSection: 2
+                listModel: Config.options.bar.layouts.right
+                sourceListModel: Config.options.bar.layouts.availableComps
+                onUpdated: (newList) => {
+                    Config.options.bar.layouts.right = newList
+                }
+                onSourceUpdated: (newList) => {
+                    Config.options.bar.layouts.availableComps = newList
+                } 
             }
         }
     }
 
     ContentSection {
-        icon: "notifications"
-        title: Translation.tr("Notifications")
-        ConfigSwitch {
-            buttonIcon: "counter_2"
-            text: Translation.tr("Unread indicator: show count")
-            checked: Config.options.bar.indicators.notifications.showUnreadCount
-            onCheckedChanged: {
-                Config.options.bar.indicators.notifications.showUnreadCount = checked;
+        icon: "open_in_full"
+        title: Translation.tr("Bar sizes")
+
+        ConfigSpinBox {
+            icon: "height"
+            text: Translation.tr("Bar height")
+            value: Config.options.bar.sizes.height
+            from: 30
+            to: 50
+            stepSize: 1
+            onValueChanged: {
+                Config.options.bar.sizes.height = value;
+            }
+        }
+        ConfigSpinBox {
+            icon: "width"
+            text: Translation.tr("Bar width")
+            value: Config.options.bar.sizes.width
+            from: 30
+            to: 50
+            stepSize: 1
+            onValueChanged: {
+                Config.options.bar.sizes.width = value;
             }
         }
     }
-    
+
     ContentSection {
         icon: "spoke"
         title: Translation.tr("Positioning")
@@ -131,7 +169,7 @@ ContentPage {
         }
 
         ConfigRow {
-            
+            Layout.fillHeight: false
             ContentSubsection {
                 title: Translation.tr("Corner style")
                 Layout.fillWidth: true
@@ -185,25 +223,130 @@ ContentPage {
                 }
             }
         }
-    }
 
-    ContentSection {
-        icon: "mosque"
-        title: Translation.tr("Prayer Times")
-        ConfigRow {
-            uniform: true
-            ConfigSwitch {
-                buttonIcon: "check"
-                text: Translation.tr("Enable")
-                checked: Config.options.bar.prayerTimes.enable
-                onCheckedChanged: {
-                    Config.options.bar.prayerTimes.enable = checked;
+        ContentSubsection {
+            title: Translation.tr("Bar background style")
+            Layout.fillWidth: false
+
+            ConfigSelectionArray {
+                currentValue: Config.options.bar.barBackgroundStyle
+                onSelected: newValue => {
+                    Config.options.bar.barBackgroundStyle = newValue;
                 }
+                options: [          
+                    {
+                        displayName: Translation.tr("Transparent"),
+                        icon: "opacity",
+                        value: 0
+                    },
+                    {
+                        displayName: Translation.tr("Visible"),
+                        icon: "visibility",
+                        value: 1
+                    }
+                ]
+            }
+        }
+        
+    }
+    
+    ContentSection {
+        id: activeWindow
+        icon: "ad"
+        title: Translation.tr("Active window")
+        ConfigSwitch {
+            buttonIcon: "crop_free"
+            text: Translation.tr("Use fixed size")
+            checked: Config.options.bar.activeWindow.fixedSize
+            onCheckedChanged: {
+                Config.options.bar.activeWindow.fixedSize = checked;
             }
         }
     }
 
     ContentSection {
+        id: crypto
+        icon: "currency_bitcoin"
+        title: Translation.tr("Crypto")
+
+        ConfigRow {
+            MaterialTextArea {
+                Layout.fillWidth: true
+                placeholderText: Translation.tr("CoinGecko IDs (comma separated, e.g. bitcoin,ethereum)")
+                text: Config.options.bar.crypto.coins.join(",")
+                onEditingFinished: {
+                    Config.options.bar.crypto.coins = text.split(",").map(s => s.trim()).filter(s => s !== "")
+                }
+            }
+        }
+
+        ConfigSwitch {
+            buttonIcon: "colors"
+            text: Translation.tr('Tint icons')
+            checked: Config.options.bar.crypto.monochromeIcon
+            onCheckedChanged: {
+                Config.options.bar.crypto.monochromeIcon = checked;
+            }
+        }
+
+        ConfigSpinBox {
+            icon: "update"
+            text: Translation.tr("Refresh Rate (min)")
+            value: Config.options.bar.crypto.refreshRate
+            from: 1
+            to: 60
+            stepSize: 1
+            onValueChanged: {
+                Config.options.bar.crypto.refreshRate = value;
+            }
+        }
+    }
+
+    ContentSection {
+        id: musicPlayer
+        icon: "music_cast"
+        title: Translation.tr("Media player")
+        ConfigSwitch {
+            enabled: !Config.options.bar.vertical
+            buttonIcon: "crop_free"
+            text: Translation.tr("Use custom size")
+            checked: Config.options.bar.mediaPlayer.useCustomSize
+            onCheckedChanged: {
+                Config.options.bar.mediaPlayer.useCustomSize = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Only available in horizontal mode")
+            }
+        }
+        ConfigSpinBox {
+            enabled: !Config.options.bar.vertical
+            icon: "width_full"
+            text: Translation.tr("Custom size")
+            value: Config.options.bar.mediaPlayer.customSize
+            from: 100
+            to: 500
+            stepSize: 25
+            onValueChanged: {
+                Config.options.bar.mediaPlayer.customSize = value;
+            }
+        }
+    }
+
+    ContentSection {
+        icon: "notifications"
+        title: Translation.tr("Notifications")
+        ConfigSwitch {
+            buttonIcon: "counter_2"
+            text: Translation.tr("Unread indicator: show count")
+            checked: Config.options.bar.indicators.notifications.showUnreadCount
+            onCheckedChanged: {
+                Config.options.bar.indicators.notifications.showUnreadCount = checked;
+            }
+        }
+    }
+
+    ContentSection {
+        id: systemTray
         icon: "shelf_auto_hide"
         title: Translation.tr("Tray")
 
@@ -227,6 +370,34 @@ ContentPage {
     }
 
     ContentSection {
+        id: timerAndPomodoro
+        icon: "timer_play"
+        title: Translation.tr("Timer & Pomodoro")
+
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "timer"
+                text: Translation.tr("Show stopwatch")
+                checked: Config.options.bar.timers.showStopwatch
+                onCheckedChanged: {
+                    Config.options.bar.timers.showStopwatch = checked;
+                }
+            }
+            ConfigSwitch {
+                buttonIcon: "search_activity"
+                text: Translation.tr("Show pomodoro")
+                checked: Config.options.bar.timers.showPomodoro
+                onCheckedChanged: {
+                    Config.options.bar.timers.showPomodoro = checked;
+                }
+            }
+        }
+
+    }
+
+    ContentSection {
+        id: utilityButtons
         icon: "widgets"
         title: Translation.tr("Utility buttons")
 
@@ -301,19 +472,7 @@ ContentPage {
     }
 
     ContentSection {
-        icon: "cloud"
-        title: Translation.tr("Weather")
-        ConfigSwitch {
-            buttonIcon: "check"
-            text: Translation.tr("Enable")
-            checked: Config.options.bar.weather.enable
-            onCheckedChanged: {
-                Config.options.bar.weather.enable = checked;
-            }
-        }
-    }
-
-    ContentSection {
+        id: workspaces
         icon: "workspaces"
         title: Translation.tr("Workspaces")
 
@@ -337,10 +496,23 @@ ContentPage {
 
         ConfigSwitch {
             buttonIcon: "colors"
+            enabled: Config.options.bar.workspaces.showAppIcons
             text: Translation.tr('Tint app icons')
             checked: Config.options.bar.workspaces.monochromeIcons
             onCheckedChanged: {
                 Config.options.bar.workspaces.monochromeIcons = checked;
+            }
+        }
+        
+        ConfigSwitch {
+            buttonIcon: "grid_3x3"
+            text: Translation.tr('Use workspace map')
+            checked: Config.options.bar.workspaces.useWorkspaceMap
+            onCheckedChanged: {
+                Config.options.bar.workspaces.useWorkspaceMap = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr('Edit the workspace start index for monitors in the config file')
             }
         }
 
@@ -353,6 +525,18 @@ ContentPage {
             stepSize: 1
             onValueChanged: {
                 Config.options.bar.workspaces.shown = value;
+            }
+        }
+
+        ConfigSpinBox {
+            icon: "select_window"
+            text: Translation.tr("Maximum window count per workspace")
+            value: Config.options.bar.workspaces.maxWindowCount
+            from: 1
+            to: 20
+            stepSize: 1
+            onValueChanged: {
+                Config.options.bar.workspaces.maxWindowCount = value;
             }
         }
 

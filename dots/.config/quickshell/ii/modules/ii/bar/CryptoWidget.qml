@@ -1,5 +1,3 @@
-pragma ComponentBehavior: Bound
-
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.services
@@ -8,73 +6,94 @@ import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 
-MouseArea {
+RowLayout {
     id: root
-    implicitWidth: rowLayout.implicitWidth + 10 * 2
-    implicitHeight: Appearance.sizes.barHeight
+    spacing: 4
 
-    acceptedButtons: Qt.LeftButton | Qt.RightButton
-    
-    onPressed: {
-        if (mouse.button === Qt.RightButton || mouse.button === Qt.LeftButton) {
-            Crypto.getData();
-            Quickshell.execDetached(["notify-send", 
-                "Crypto", 
-                "Refreshing price..."
-                , "-a", "Shell"
-            ])
-        }
+    Timer {
+        interval: Config.options.bar.crypto.refreshRate * 60 * 1000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: Crypto.getData()
     }
 
-    property string imageUrl: ""
-    property string symbol: ""
-    property string price: ""
-    
-    RowLayout {
-        id: rowLayout
-        anchors.centerIn: parent
+    // Fallback text if model is empty
+    StyledText {
+        visible: (Crypto.coinModel.count ?? Crypto.coinModel.length ?? 0) === 0
+        text: "No coins"
+        color: Appearance.colors.colOnLayer1
+        font.pixelSize: Appearance.font.pixelSize.small
+        Layout.alignment: Qt.AlignVCenter
+    }
 
-        // Show fetched image if available
-        Item {
-            Layout.alignment: Qt.AlignVCenter
-            width: Appearance.font.pixelSize.large
-            height: Appearance.font.pixelSize.large
-            visible: root.imageUrl !== ""
+    Repeater {
+        model: Crypto.coinModel
+        delegate: MouseArea {
+            Layout.fillHeight: true
+            implicitWidth: rowLayout.implicitWidth + 10 * 2
+            implicitHeight: Appearance.sizes.barHeight
 
-            Image {
-                id: coinImg
-                anchors.fill: parent
-                source: root.imageUrl
-                sourceSize.width: Appearance.font.pixelSize.large
-                sourceSize.height: Appearance.font.pixelSize.large
-                visible: !Crypto.monochromeIcon
-            }
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
             
-            Desaturate {
-                anchors.fill: parent
-                source: coinImg
-                desaturation: 1.0
-                visible: Crypto.monochromeIcon
+            onPressed: (mouse) => {
+                if (mouse.button === Qt.RightButton || mouse.button === Qt.LeftButton) {
+                    Crypto.getData();
+                    Quickshell.execDetached(["notify-send", 
+                        "Crypto", 
+                        "Refreshing price..."
+                        , "-a", "Shell"
+                    ])
+                }
             }
-        }
 
-        // Fallback to symbol if image is missing
-        StyledText {
-            visible: root.imageUrl === ""
-            font.pixelSize: Appearance.font.pixelSize.small
-            font.bold: true
-            color: Appearance.colors.colOnLayer1
-            // Use fetched symbol
-            text: root.symbol
-            Layout.alignment: Qt.AlignVCenter
-        }
+            RowLayout {
+                id: rowLayout
+                anchors.centerIn: parent
+                spacing: 5
 
-        StyledText {
-            visible: true
-            font.pixelSize: Appearance.font.pixelSize.small
-            color: Appearance.colors.colOnLayer1
-            text: root.price
-            Layout.alignment: Qt.AlignVCenter
+                // Show fetched image if available
+                Item {
+                    Layout.alignment: Qt.AlignVCenter
+                    width: Appearance.font.pixelSize.large
+                    height: Appearance.font.pixelSize.large
+                    visible: (imageUrl || "") !== ""
+
+                    Image {
+                        id: coinImg
+                        anchors.fill: parent
+                        source: imageUrl || ""
+                        sourceSize.width: Appearance.font.pixelSize.large
+                        sourceSize.height: Appearance.font.pixelSize.large
+                        visible: !Config.options.bar.crypto.monochromeIcon
+                    }
+                    
+                    Desaturate {
+                        anchors.fill: parent
+                        source: coinImg
+                        desaturation: 1.0
+                        visible: Config.options.bar.crypto.monochromeIcon
+                    }
+                }
+
+                // Fallback to symbol if image is missing
+                StyledText {
+                    visible: (imageUrl || "") === ""
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.bold: true
+                    color: Appearance.colors.colOnLayer1
+                    text: symbol || ""
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                StyledText {
+                    visible: true
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    color: Appearance.colors.colOnLayer1
+                    text: price || ""
+                    Layout.alignment: Qt.AlignVCenter
+                }
+            }
         }
     }
 }
