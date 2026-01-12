@@ -11,6 +11,8 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import Quickshell.Services.Mpris
+import Qt5Compat.GraphicalEffects
 
 Scope { // Scope
     id: root
@@ -126,6 +128,110 @@ Scope { // Scope
                                 buttonPadding: dockRow.padding
                             }
                             DockSeparator {}
+                            // Media Player 
+                            Item {
+                                id: mediaPlayerItem
+                                Layout.fillHeight: true
+                                Layout.topMargin: 20
+                                Layout.leftMargin: 5
+                                Layout.bottomMargin: Appearance.sizes.hyprlandGapsOut + dockRow.padding
+                                
+                                property var activePlayer: MprisController.activePlayer
+                                property string cleanedTitle: activePlayer?.trackTitle ?? ""
+                                visible: activePlayer !== null && cleanedTitle !== ""
+                                
+                                implicitWidth: visible ? mediaRow.implicitWidth + 16 : 0
+                                implicitHeight: parent.height
+                                
+                                Timer {
+                                    running: mediaPlayerItem.activePlayer?.playbackState == MprisPlaybackState.Playing
+                                    interval: Config.options.resources.updateInterval
+                                    repeat: true
+                                    onTriggered: mediaPlayerItem.activePlayer.positionChanged()
+                                }
+                                
+                                Rectangle {
+                                    anchors.fill: parent
+                                    color: "transparent"
+                                    radius: Appearance.rounding.normal
+                                    
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.RightButton | Qt.LeftButton
+                                        onPressed: (event) => {
+                                            if (event.button === Qt.LeftButton) {
+                                                mediaPlayerItem.activePlayer.togglePlaying();
+                                            } else if (event.button === Qt.RightButton) {
+                                                mediaPlayerItem.activePlayer.next();
+                                            }
+                                        }
+                                    }
+                                    
+                                    RowLayout {
+                                        id: mediaRow
+                                        anchors.centerIn: parent
+                                        spacing: 8
+                                        
+                                        Image {
+                                            Layout.alignment: Qt.AlignVCenter
+                                            source: mediaPlayerItem.activePlayer?.trackArtUrl && mediaPlayerItem.activePlayer.trackArtUrl !== "" ? mediaPlayerItem.activePlayer.trackArtUrl : "../../assets/icons/cover.png"
+                                            fillMode: Image.PreserveAspectCrop
+                                            cache: false
+                                            width: 35
+                                            height: 35
+                                            sourceSize.width: 35
+                                            sourceSize.height: 35
+                                            
+                                            layer.enabled: true
+                                            layer.effect: OpacityMask {
+                                                maskSource: Rectangle {
+                                                    width: 35
+                                                    height: 35
+                                                    radius: 6
+                                                }
+                                            }
+                                        }
+                                        
+                                        Column {
+                                            Layout.alignment: Qt.AlignVCenter
+                                            Layout.preferredWidth: 150
+                                            spacing: -2
+                                            
+                                            StyledText {
+                                                width: parent.width
+                                                horizontalAlignment: Text.AlignLeft
+                                                elide: Text.ElideRight
+                                                color: Appearance.colors.colSubtext
+                                                text: mediaPlayerItem.activePlayer?.trackArtist ?? "Unknown Artist"
+                                                font.pixelSize: 11
+                                            }
+                                            
+                                            StyledText {
+                                                width: parent.width
+                                                horizontalAlignment: Text.AlignLeft
+                                                elide: Text.ElideRight
+                                                color: Appearance.colors.colOnLayer1
+                                                text: mediaPlayerItem.cleanedTitle !== "" ? mediaPlayerItem.cleanedTitle : "No Title"
+                                                font.weight: Font.Medium
+                                                font.pixelSize: 13
+                                            }
+                                        }
+
+                                        MaterialSymbol {
+                                            Layout.topMargin: -5
+                                            Layout.alignment: Qt.AlignVCenter
+                                            text: mediaPlayerItem.activePlayer?.isPlaying ? "pause" : "play_arrow"
+                                            iconSize: 23
+                                            color: Appearance.colors.colOnLayer1
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            DockSeparator {
+                                visible: mediaPlayerItem.visible
+                            }
+                            
                             DockButton {
                                 Layout.fillHeight: true
                                 onClicked: Quickshell.execDetached(["rofi", "-show", "drun", "-theme","~/.config/rofi/full.rasi"]);
