@@ -20,6 +20,9 @@ Item {
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.QsWindow.window?.screen)
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
 
+    // NOTE,TODO: Workspace ID handling is simplified with this commit: https://github.com/end-4/dots-hyprland/commit/68f0355940f374ec4dcc168be3f0e123e7635bfb
+    // I have to somehow merge the new system and our system (workspace map)
+    // This is the new way of handling active workspace id: readonly property int effectiveActiveWorkspaceId: monitor?.activeWorkspace?.id ?? 1
     readonly property bool useWorkspaceMap: Config.options.bar.workspaces.useWorkspaceMap
     readonly property list<int> workspaceMap: Config.options.bar.workspaces.workspaceMap 
     readonly property int monitorIndex: barLoader.monitorIndex
@@ -31,17 +34,50 @@ Item {
     property int workspaceIndexInGroup: (monitor?.activeWorkspace?.id - root.workspaceOffset - 1) % root.workspacesShown    
     property var monitorWindows
 
-    property int individualIconBoxHeight: 24
-    property int iconBoxWrapperSize: 28
+    property int individualIconBoxHeight: 22 // actually the length but nwm...
+    property int iconBoxWrapperSize: 26
     property int workspaceDotSize: 4
     property real iconRatio: 0.8
     property bool showIcons: Config.options.bar.workspaces.showAppIcons
 
-    // Function to update workspaceOccupied
+    property bool showNumbersByMs: false
+    Timer {
+        id: showNumbersTimer
+        interval: (Config.options.bar.workspaces.showNumberDelay ?? 100)
+        repeat: false
+        onTriggered: {
+            root.showNumbersByMs = true
+        }
+    }
+    Connections {
+        target: GlobalStates
+        function onSuperDownChanged() {
+            if (!Config?.options.bar.autoHide.showWhenPressingSuper.enable) return;
+            if (GlobalStates.superDown) showNumbersTimer.restart();
+            else {
+                showNumbersTimer.stop();
+                root.showNumbersByMs = false;
+            }
+        }
+        function onSuperReleaseMightTriggerChanged() { 
+            showNumbersTimer.stop()
+        }
+    }
+
+
     function updateWorkspaceOccupied() {
         workspaceOccupied = Array.from({ length: root.workspacesShown }, (_, i) => {
-            return Hyprland.workspaces.values.some(ws => ws.id === workspaceOffset + workspaceGroup * root.workspacesShown + i + 1);
-        })
+            const workspaceId = workspaceOffset + workspaceGroup * root.workspacesShown + i + 1;
+            const workspaceExists = Hyprland.workspaces.values.some(ws => ws.id === workspaceId);
+
+            if (!workspaceExists) return false;
+            
+            // current workspace doesnot have a window -> make it not occupied
+            if (workspaceId === monitor?.activeWorkspace?.id) {
+                return hasWindowsInWorkspace(workspaceId);
+            }
+            return true;
+        });
     }
 
     function hasWindowsInWorkspace(workspaceId) {
@@ -96,8 +132,11 @@ Item {
 
     MouseArea { 
         anchors.fill: parent
-        acceptedButtons: Qt.BackButton
+        acceptedButtons: Qt.BackButton | Qt.RightButton
         onPressed: (event) => {
+            if (event.button === Qt.RightButton) {
+                GlobalStates.overviewOpen = !GlobalStates.overviewOpen
+            } 
             if (event.button === Qt.BackButton) {
                 Hyprland.dispatch(`togglespecialworkspace`);
             } 
@@ -118,6 +157,7 @@ Item {
         anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
         anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
         color: Appearance.colors.colPrimary
+        opacity: Config.options.bar.workspaces.activeIndicatorOpacity / 100
         radius: Appearance.rounding.full
         
         AnimatedTabIndexPair {
@@ -134,42 +174,53 @@ Item {
             return y
         }
 
-        property int baseHeight: root.iconBoxWrapperSize
-        property real itemHeight: contentLayout.children[root.workspaceIndexInGroup].height
+        function getWindowCount(workspaceId) {
+            return HyprlandData.windowList.filter( w => w.workspace.id === workspaceId && !w.floating ).length;
+        }
 
-        property real indicatorMargin: 7      // to make a perfect circle in one windowed-workspaces
-        property real emptyWorkspaceMargin: 2 // to make a perferct circle in empty workspaces
+        property int index: root.workspaceIndexInGroup
+        property int baseHeight: root.iconBoxWrapperSize
+        property int windowCount: getWindowCount(index + root.workspaceOffset + 1)
+
+        property bool isEmptyWorkspace: windowCount === 0
+        property bool isOneWindow: windowCount === 1
+
+        // insets to create perfect round circles // note: these are pain in the ass
+        property real indicatorInsetEmpty: root.iconBoxWrapperSize * 0.07
+        property real indicatorInsetOneWindow: root.iconBoxWrapperSize * 0.14
+        property real indicatorInset: root.iconBoxWrapperSize * 0.1
+
+        property real visualInset: {
+            if (!root.showIcons)
+                return indicatorInsetEmpty - 0.5
+            if (isEmptyWorkspace)
+                return indicatorInsetEmpty
+            if (isOneWindow)
+                return indicatorInsetOneWindow
+            return indicatorInset
+        }
 
         property real pairMin: Math.min(idxPair.idx1, idxPair.idx2)
         property real pairAbs: Math.abs(idxPair.idx1 - idxPair.idx2)
 
-        property real offset: {
+        property real currentItemOffset: {
             const item = contentLayout.children[root.workspaceIndexInGroup]
             const itemSize = root.vertical ? item?.height : item?.width
             return itemSize - baseHeight
         }
 
-        property real indicatorPosition: {
-            const basePos = pairMin * root.iconBoxWrapperSize
-            const accumulatedOffset = offsetFor(root.workspaceIndexInGroup + 1)
-            return basePos + accumulatedOffset - offset + indicatorMargin / 2
-        }
+        readonly property real accumulatedPreviousOffsets: offsetFor(root.workspaceIndexInGroup + 1)
 
-        property real indicatorLength: {
-            const baseLength = (pairAbs + 1) * root.iconBoxWrapperSize
-            return baseLength + offset - indicatorMargin
-        }
+        readonly property real baseIndicatorPosition: pairMin * root.iconBoxWrapperSize
+        readonly property real baseIndicatorLength: (pairAbs + 1) * root.iconBoxWrapperSize
 
-        property int index: root.workspaceIndexInGroup
-        property int workspacePadding: !hasWindowsInWorkspace(index + root.workspaceOffset + 1) || !root.showIcons ? emptyWorkspaceMargin : 0
-        
-        property real logicalPosition: indicatorPosition - workspacePadding
-        property real logicalLength: indicatorLength + workspacePadding * 2   
+        property real indicatorPosition: baseIndicatorPosition + accumulatedPreviousOffsets - currentItemOffset + visualInset
+        property real indicatorLength: baseIndicatorLength + currentItemOffset - visualInset * 2
 
-        y: root.vertical ? logicalPosition : 0
-        x: root.vertical ? 0 : logicalPosition
-        implicitHeight: root.vertical ? logicalLength : individualIconBoxHeight
-        implicitWidth: root.vertical ? individualIconBoxHeight : logicalLength
+        y: root.vertical ? indicatorPosition : 0
+        x: root.vertical ? 0 : indicatorPosition
+        implicitHeight: root.vertical ? indicatorLength : individualIconBoxHeight
+        implicitWidth: root.vertical ? individualIconBoxHeight : indicatorLength
     }
 
     
@@ -202,7 +253,7 @@ Item {
                 implicitHeight: root.vertical ? contentLayout.children[index]?.height ?? 0 : root.iconBoxWrapperSize
 
                 color: ColorUtils.transparentize(Appearance.m3colors.m3secondaryContainer, 0.4)
-                opacity: (workspaceOccupied[index] && !(!activeWindow?.activated && monitor?.activeWorkspace?.id === index+1)) ? 1 : 0
+                opacity: (workspaceOccupied[index] && !(!activeWindow?.activated && root.effectiveActiveWorkspaceId === index+1)) ? 1 : 0
 
                 Behavior on opacity {
                     animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
@@ -265,9 +316,24 @@ Item {
                             IconImage {
                                 id: mainAppIcon
                                 Layout.alignment: Qt.AlignHCenter
+                                anchors {
+                                    left: parent.left
+                                    top: parent.top
+                                    leftMargin: root.showNumbersByMs ? 15 : 2
+                                    topMargin: root.showNumbersByMs ? 15 : 2
+                                }
                                 source: modelData.icon
-                                anchors.centerIn: parent
-                                implicitSize: root.individualIconBoxHeight * root.iconRatio
+                                implicitSize: (root.individualIconBoxHeight * root.iconRatio) * (root.showNumbersByMs ? 1 / 1.5 : 1)
+
+                                Behavior on anchors.leftMargin {
+                                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                }
+                                Behavior on anchors.topMargin {
+                                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                }
+                                Behavior on implicitSize {
+                                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                }
                             }
                             Loader {
                                 active: Config.options.bar.workspaces.monochromeIcons
@@ -295,8 +361,8 @@ Item {
         }
     }
 
-    component WorkspaceBackgroundIndicator: Rectangle {
-        property bool showNumbers: Config.options.bar.workspaces.alwaysShowNumbers
+    component WorkspaceBackgroundIndicator: Rectangle { // dot or number
+        property bool showNumbers: Config.options.bar.workspaces.alwaysShowNumbers || root.showNumbersByMs
         property int workspaceValue
         property bool activeWorkspace
         property color indColor: (activeWorkspace) ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[index] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
@@ -305,9 +371,8 @@ Item {
         width: root.workspaceDotSize
         height: width
         radius: width / 2
-        visible: layout.implicitHeight + 8 < root.iconBoxWrapperSize
+        visible: layout.implicitHeight + 8 < root.iconBoxWrapperSize || root.showNumbersByMs
         color: !showNumbers ?  indColor : "transparent"
-
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)

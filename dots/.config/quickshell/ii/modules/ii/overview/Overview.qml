@@ -14,150 +14,181 @@ import Quickshell.Hyprland
 Scope {
     id: overviewScope
     property bool dontAutoCancelSearch: false
-    property string position: Config.options.overview.position
-    Variants {
-        id: overviewVariants
-        model: Quickshell.screens
-        PanelWindow {
-            id: root
-            required property var modelData
-            property string searchingText: ""
-            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.screen)
-            property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
-            screen: modelData
-            visible: GlobalStates.overviewOpen && (!Config.options.overview.showOnlyOnFocusedMonitor || monitorIsFocused)
+    PanelWindow {
+        id: root
+        property string searchingText: ""
+        readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.screen)
+        property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
+        property int monitorIndex: monitor.id
+        property string overviewStyle: Config.options.overview.style
 
-            WlrLayershell.namespace: "quickshell:overview"
-            WlrLayershell.layer: WlrLayer.Overlay
-            // WlrLayershell.keyboardFocus: GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-            color: "transparent"
+        WlrLayershell.namespace: "quickshell:overview"
+        WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.keyboardFocus: GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+        color: "transparent"
 
-            mask: Region {
-                item: GlobalStates.overviewOpen ? gridLayout : null
+        property var zoomLevels: {  // has to be reverted compared to background
+            "in": { default: 1, zoomed: 1.04 },
+            "out": { default: 1.04, zoomed: 1 }
+        }
+
+        readonly property bool isZoomInStyle: Config.options.overview.scrollingStyle.zoomStyle === "in"
+        readonly property bool showOpeningAnimation: Config.options.overview.showOpeningAnimation
+
+        property real defaultRatio: isZoomInStyle ? zoomLevels.in.default : zoomLevels.out.default
+        property real zoomedRatio: isZoomInStyle ? zoomLevels.in.zoomed : zoomLevels.out.zoomed
+
+        property bool isResettingZoom: false 
+        property real scaleAnimated: showOpeningAnimation ? GlobalStates.overviewOpen ? zoomedRatio : defaultRatio : 1
+
+        property real effectiveScale: showOpeningAnimation ? zoomedRatio - scaleAnimated + 1 : 1 
+
+        onIsZoomInStyleChanged: isResettingZoom = true
+        onScaleAnimatedChanged: {
+            if (scaleAnimated === defaultRatio) {
+                isResettingZoom = false
             }
+        }
 
-            anchors {
-                top: true
-                bottom: true
-                left: true
-                right: true
+        visible: {
+            if (isResettingZoom) return false // not showing when we are resetting 
+            if (!showOpeningAnimation) return GlobalStates.overviewOpen // no anim
+            
+            return isZoomInStyle ? scaleAnimated > defaultRatio : scaleAnimated < defaultRatio
+        }
+
+        Behavior on scaleAnimated {
+            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(root)
+        }
+
+        anchors {
+            top: true
+            bottom: true
+            left: true
+            right: true
+        }
+        property int barSize: Config.options.bar.vertical ? Appearance.sizes.verticalBarWidth : Appearance.sizes.barHeight
+        property int margin: isZoomInStyle ? barSize : barSize * 2
+        margins { 
+            top: -margin
+            bottom: -margin
+            left: -margin
+            right: -margin
+        }
+
+        HyprlandFocusGrab {
+            id: grab
+            windows: [root]
+            property bool canBeActive: root.monitorIsFocused
+            active: false
+            onCleared: () => {
+                if (!active)
+                    GlobalStates.overviewOpen = false;
             }
+        }
 
-            HyprlandFocusGrab {
-                id: grab
-                windows: [root]
-                property bool canBeActive: root.monitorIsFocused
-                active: false
-                onCleared: () => {
-                    if (!active)
-                        GlobalStates.overviewOpen = false;
-                }
-            }
-
-            Connections {
-                target: GlobalStates
-                function onOverviewOpenChanged() {
-                    if (!GlobalStates.overviewOpen) {
-                        searchWidget.disableExpandAnimation();
-                        overviewScope.dontAutoCancelSearch = false;
-                    } else {
-                        if (!overviewScope.dontAutoCancelSearch) {
-                            searchWidget.cancelSearch();
-                        }
-                        delayedGrabTimer.start();
+        Connections {
+            target: GlobalStates
+            function onOverviewOpenChanged() {
+                if (!GlobalStates.overviewOpen) {
+                    searchWidget.disableExpandAnimation();
+                    overviewScope.dontAutoCancelSearch = false;
+                } else {
+                    if (!overviewScope.dontAutoCancelSearch) {
+                        searchWidget.cancelSearch();
                     }
+                    delayedGrabTimer.start();
                 }
             }
+        }
 
-            Timer {
-                id: delayedGrabTimer
-                interval: Config.options.hacks.arbitraryRaceConditionDelay
-                repeat: false
-                onTriggered: {
-                    if (!grab.canBeActive)
-                        return;
-                    grab.active = GlobalStates.overviewOpen;
-                }
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_Escape) {
+                GlobalStates.overviewOpen = false;
+            }
+        }
+
+        
+
+        Timer {
+            id: delayedGrabTimer
+            interval: Config.options.hacks.arbitraryRaceConditionDelay
+            repeat: false
+            onTriggered: {
+                if (!grab.canBeActive)
+                    return;
+                grab.active = GlobalStates.overviewOpen;
+            }
+        }
+
+        function setSearchingText(text) {
+            searchWidget.setSearchingText(text);
+            searchWidget.focusFirstItem();
+        }
+
+        Item {
+            id: contentItem
+            anchors.fill: parent
+
+            MouseArea { // We could have used PanelWindow.mask to detect this, but this is more stable
+                anchors.fill: parent
+                onClicked: GlobalStates.overviewOpen = false;
             }
 
-            implicitWidth: gridLayout.implicitWidth
-            implicitHeight: gridLayout.implicitHeight
-
-            function setSearchingText(text) {
-                searchWidget.setSearchingText(text);
-                searchWidget.focusFirstItem();
-            }
-
-            GridLayout {
-                id: gridLayout
-                visible: GlobalStates.overviewOpen
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    margins: overviewScope.position == "center" ? root.implicitHeight / Config.options.overview.centerTopPaddingRatio : 0
-                }
-                columns: 1
-
-                state: overviewScope.position === "center" ? "top" : overviewScope.position
-                states: [
-                    State {
-                        name: "top"
-                        AnchorChanges { target: gridLayout; anchors.top: parent.top; anchors.bottom: undefined; }
-                    },
-                    State {
-                        name: "bottom" 
-                        AnchorChanges { target: gridLayout; anchors.top: undefined; anchors.bottom: parent.bottom; }
-                    }
-                ]
+            Item { // Wrapper for animation 
+                id: searchWidgetWrapper
+                implicitHeight: searchWidget.implicitHeight
+                implicitWidth: searchWidget.implicitWidth
+                z: 999
 
                 Keys.onPressed: event => {
                     if (event.key === Qt.Key_Escape) {
                         GlobalStates.overviewOpen = false;
-                    } else if (event.key === Qt.Key_Left) {
-                        if (!root.searchingText)
-                            Hyprland.dispatch("workspace r-1");
-                    } else if (event.key === Qt.Key_Right) {
-                        if (!root.searchingText)
-                            Hyprland.dispatch("workspace r+1");
                     }
                 }
 
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    top: parent.top
+                    topMargin: root.margin + Appearance.sizes.elevationMargin
+                }
                 SearchWidget {
                     id: searchWidget
-                    Layout.row: overviewScope.position == "bottom" ? 1 : 0
-                    Layout.alignment: Qt.AlignHCenter
+                    scale: root.effectiveScale
+                    anchors.horizontalCenter: parent.horizontalCenter
                     Synchronizer on searchingText {
                         property alias source: root.searchingText
                     }
                 }
+            }
+            
 
-                Loader {
-                    id: overviewLoader
-                    Layout.row: overviewScope.position == "bottom" ? 0 : 1
-                    Layout.alignment: Qt.AlignHCenter
-                    active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
-                    sourceComponent: OverviewWidget {
-                        panelWindow: root
-                        visible: (root.searchingText == "")
-                    }
+            Loader { // Classic overview
+                id: overviewLoader
+                scale: root.effectiveScale
+                anchors.top: searchWidgetWrapper.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                active: root.visible && (Config?.options.overview.enable ?? true) && root.overviewStyle == "classic"
+                sourceComponent: OverviewWidget {
+                    panelWindow: root
+                    visible: (root.searchingText == "")
+                    //monitorIndex: root.monitorIndex
                 }
             }
         }
+
+        
     }
+    
 
     function toggleClipboard() {
         if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch) {
             GlobalStates.overviewOpen = false;
             return;
         }
-        for (let i = 0; i < overviewVariants.instances.length; i++) {
-            let panelWindow = overviewVariants.instances[i];
-            if (panelWindow.modelData.name == Hyprland.focusedMonitor.name) {
-                overviewScope.dontAutoCancelSearch = true;
-                panelWindow.setSearchingText(Config.options.search.prefix.clipboard);
-                GlobalStates.overviewOpen = true;
-                return;
-            }
-        }
+        overviewScope.dontAutoCancelSearch = true;
+        root.setSearchingText(Config.options.search.prefix.clipboard);
+        GlobalStates.overviewOpen = true;
     }
 
     function toggleEmojis() {
@@ -165,15 +196,9 @@ Scope {
             GlobalStates.overviewOpen = false;
             return;
         }
-        for (let i = 0; i < overviewVariants.instances.length; i++) {
-            let panelWindow = overviewVariants.instances[i];
-            if (panelWindow.modelData.name == Hyprland.focusedMonitor.name) {
-                overviewScope.dontAutoCancelSearch = true;
-                panelWindow.setSearchingText(Config.options.search.prefix.emojis);
-                GlobalStates.overviewOpen = true;
-                return;
-            }
-        }
+        overviewScope.dontAutoCancelSearch = true;
+        root.setSearchingText(Config.options.search.prefix.emojis);
+        GlobalStates.overviewOpen = true;
     }
 
     IpcHandler {
