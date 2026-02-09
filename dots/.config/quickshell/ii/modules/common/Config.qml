@@ -365,6 +365,13 @@ Singleton {
                         },
                     ]
                     property list<var> left: [
+                        {   id: "left_sidebar_button",
+                            icon: "star",
+                            title: "Left sidebar button",
+                            centered: false,
+                            visible: true,
+                            scrollTo: "" 
+                        },
                         {
                             id: "active_window",
                             icon: "label",
@@ -424,6 +431,13 @@ Singleton {
                             centered: false,
                             visible: true,
                             scrollTo: "system_tray"
+                        },
+                        {   id: "right_sidebar_button",
+                            icon: "notifications",
+                            title: "Right sidebar button",
+                            centered: false,
+                            visible: true,
+                            scrollTo: "" 
                         }
                     ]
 

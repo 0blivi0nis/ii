@@ -34,21 +34,24 @@ Item {
         "system_monitor": [systemMonitorComp, systemMonitorCompVert],
         "clock": [clockComp, clockCompVert],
         "battery": [batteryComp, batteryCompVert],
-        "utility_buttons": [utilityButtonsComp, utilityButtonsCompVert],
-        "system_tray": [systemTrayComp, systemTrayCompVert],
-        "active_window": [activeWindowComp, activeWindowCompVert],
+        "utility_buttons": [utilityButtonsComp, utilityButtonsComp],
+        "system_tray": [systemTrayComp, systemTrayComp],
+        "active_window": [activeWindowComp, activeWindowComp],
         "date": [dateCompVert, dateCompVert],
-        "record_indicator": [recordIndicatorComp, recordIndicatorCompVert],
+        "record_indicator": [recordIndicatorComp, recordIndicatorComp],
         "screen_share_indicator": [screenshareIndicatorComp, screenshareIndicatorComp],
         "timer": [timerComp, timerCompVert],
         "weather": [weatherComp, weatherComp],
+        "left_sidebar_button": [leftSidebarButtonComp, leftSidebarButtonComp],
+        "right_sidebar_button": [rightSidebarButtonComp, rightSidebarButtonCompVert],
         "crypto": [cryptoComp, cryptoComp],
-        "prayer": [prayerComp, prayerComp]
+        "prayer": [prayerComp, prayerComp],
     })
 
     
     property real startRadius: {
         if (barSection === 0) {
+            if (originalIndex == 0) return Appearance.rounding.full
             return Appearance.rounding.verysmall
         } else if (barSection === 2) {
             let hasVisibleLeft = list.slice(0, originalIndex).some(item => item.visible !== false)
@@ -62,6 +65,7 @@ Item {
 
     property real endRadius: {
         if (barSection === 2) {
+            if (originalIndex == list.length - 1) return Appearance.rounding.full
             return Appearance.rounding.verysmall
         } else if (barSection === 0) {
             let hasVisibleRight = list.slice(originalIndex + 1).some(item => item.visible !== false)
@@ -83,7 +87,7 @@ Item {
         
         startRadius: rootItem.startRadius
         endRadius: rootItem.endRadius
-        colBackground: itemLoader.item.colBackground ?? Appearance.colors.colLayer2
+        colBackground: itemLoader.item.backgroundColor ?? Appearance.colors.colLayer2
 
         items: Loader {
             id: itemLoader
@@ -101,11 +105,9 @@ Item {
 
     Component { id: screenshareIndicatorComp; ScreenShareIndicator {} }
 
-    Component { id: recordIndicatorComp; RecordIndicator {} }
-    Component { id: recordIndicatorCompVert; RecordIndicator { vertical: true } }
+    Component { id: recordIndicatorComp; RecordIndicator { vertical: rootItem.vertical } }
 
-    Component { id: activeWindowCompVert; ActiveWindow { vertical: true } }
-    Component { id: activeWindowComp; ActiveWindow {} }
+    Component { id: activeWindowComp; ActiveWindow { vertical: rootItem.vertical } }
 
     Component { id: systemMonitorComp; Resources {} }
     Component { id: systemMonitorCompVert; Vertical.Resources {} }
@@ -113,8 +115,7 @@ Item {
     Component { id: musicPlayerCompVert; Vertical.VerticalMedia {} }
     Component { id: musicPlayerComp; Media {} }
 
-    Component { id: utilityButtonsCompVert; UtilButtons { vertical: true } }
-    Component { id: utilityButtonsComp; UtilButtons {} }
+    Component { id: utilityButtonsComp; UtilButtons { vertical: rootItem.vertical } }
 
     Component { id: batteryComp; BatteryIndicator {} }
     Component { id: batteryCompVert; Vertical.BatteryIndicator {} }
@@ -122,10 +123,14 @@ Item {
     Component { id: clockCompVert; Vertical.VerticalClockWidget {} }
     Component { id: clockComp; ClockWidget {} }
 
-    Component { id: systemTrayCompVert; SysTray { vertical: true } }
-    Component { id: systemTrayComp; SysTray {} }
+    Component { id: systemTrayComp; SysTray { vertical: rootItem.vertical } }
 
     Component { id: dateCompVert; Vertical.VerticalDateWidget {} }
 
     Component { id: workspaceComp; Workspaces { vertical: rootItem.vertical } }
+
+    Component { id: leftSidebarButtonComp; LeftSidebarButton {} }
+    
+    Component { id: rightSidebarButtonComp; RightSidebarButton {} }
+    Component { id: rightSidebarButtonCompVert; VerticalRightSidebarButton {} }
 }
