@@ -29,7 +29,6 @@ DockButton {
             root.desktopEntry = DesktopEntries.heuristicLookup(appToplevel.appId);
         }
     }
-    
     Loader {
         active: isSeparator
         anchors {
