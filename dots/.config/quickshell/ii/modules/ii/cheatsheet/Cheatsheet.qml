@@ -140,6 +140,7 @@ Scope { // Scope
                     Toolbar {
                         Layout.alignment: Qt.AlignHCenter
                         enableShadow: false
+                        colBackground: Appearance.colors.colLayer3
                         ToolbarTabBar {
                             id: tabBar
                             tabButtonList: root.tabButtonList

@@ -15,99 +15,211 @@ Scope {
     id: overviewScope
     property bool dontAutoCancelSearch: false
 
-    PanelWindow {
-        id: panelWindow
-        property string searchingText: ""
-        readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
-        property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
-        visible: GlobalStates.overviewOpen
+    signal setSearchingTextRequested(string text)
 
-        WlrLayershell.namespace: "quickshell:overview"
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-        color: "transparent"
+    Variants {
+        id: overviewVariant
 
-        mask: Region {
-            item: GlobalStates.overviewOpen ? columnLayout : null
-        }
+        property var variantModel: Quickshell.screens
 
-        anchors {
-            top: true
-            bottom: true
-            left: true
-            right: true
-        }
+        model: overviewVariant.variantModel
 
-        Connections {
-            target: GlobalStates
-            function onOverviewOpenChanged() {
-                if (!GlobalStates.overviewOpen) {
-                    searchWidget.disableExpandAnimation();
-                    overviewScope.dontAutoCancelSearch = false;
-                    GlobalFocusGrab.dismiss();
-                } else {
-                    if (!overviewScope.dontAutoCancelSearch) {
-                        searchWidget.cancelSearch();
+        LazyLoader {
+            id: realOverviewLoader
+            required property var modelData
+            property int monitorIndex: overviewVariant.variantModel.indexOf(modelData)
+            property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitorIndex)
+            active: monitorIsFocused
+
+            component: PanelWindow {
+                id: root
+
+                readonly property bool monitorIsFocused: realOverviewLoader.monitorIsFocused
+                readonly property int monitorIndex: realOverviewLoader.monitorIndex
+
+                readonly property bool isScrollingLayout: GlobalStates.isScrollingLayout
+                property string searchingText: ""
+
+                WlrLayershell.namespace: "quickshell:overview"
+                WlrLayershell.layer: WlrLayer.Top
+                WlrLayershell.keyboardFocus: GlobalStates.overviewOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+                color: "transparent"
+
+                property var zoomLevels: {  // has to be reverted compared to background
+                    "in": { default: 1, zoomed: 1.04 },
+                    "out": { default: 1.04, zoomed: 1 }
+                }
+
+                readonly property bool isZoomInStyle: Config.options.overview.scrollingStyle.zoomStyle === "in"
+                readonly property bool showOpeningAnimation: Config.options.overview.showOpeningAnimation
+
+                property real defaultRatio: isZoomInStyle ? zoomLevels.in.default : zoomLevels.out.default
+                property real zoomedRatio: isZoomInStyle ? zoomLevels.in.zoomed : zoomLevels.out.zoomed
+
+                property bool isResettingZoom: false 
+                property real scaleAnimated: showOpeningAnimation ? GlobalStates.overviewOpen ? zoomedRatio : defaultRatio : 1
+
+                property real effectiveScale: showOpeningAnimation ? zoomedRatio - scaleAnimated + 1 : 1 
+
+                onIsZoomInStyleChanged: isResettingZoom = true
+                onScaleAnimatedChanged: {
+                    if (scaleAnimated === defaultRatio) {
+                        isResettingZoom = false
                     }
-                    GlobalFocusGrab.addDismissable(panelWindow);
                 }
-            }
-        }
 
-        Connections {
-            target: GlobalFocusGrab
-            function onDismissed() {
-                GlobalStates.overviewOpen = false;
-            }
-        }
-        implicitWidth: columnLayout.implicitWidth
-        implicitHeight: columnLayout.implicitHeight
-
-        function setSearchingText(text) {
-            searchWidget.setSearchingText(text);
-            searchWidget.focusFirstItem();
-        }
-
-        Column {
-            id: columnLayout
-            visible: GlobalStates.overviewOpen
-            anchors {
-                horizontalCenter: parent.horizontalCenter
-                top: parent.top
-            }
-            spacing: -8
-
-            Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape) {
-                    GlobalStates.overviewOpen = false;
-                } else if (event.key === Qt.Key_Left) {
-                    if (!panelWindow.searchingText)
-                        Hyprland.dispatch("workspace r-1");
-                } else if (event.key === Qt.Key_Right) {
-                    if (!panelWindow.searchingText)
-                        Hyprland.dispatch("workspace r+1");
+                visible: {
+                    if (isResettingZoom) return false // not showing when we are resetting 
+                    if (!showOpeningAnimation) return GlobalStates.overviewOpen // no anim
+                    
+                    return isZoomInStyle ? scaleAnimated > defaultRatio : scaleAnimated < defaultRatio
                 }
-            }
 
-            SearchWidget {
-                id: searchWidget
-                anchors.horizontalCenter: parent.horizontalCenter
-                Synchronizer on searchingText {
-                    property alias source: panelWindow.searchingText
+                Behavior on scaleAnimated {
+                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(root)
                 }
-            }
 
-            Loader {
-                id: overviewLoader
-                anchors.horizontalCenter: parent.horizontalCenter
-                active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
-                sourceComponent: OverviewWidget {
-                    screen: panelWindow.screen
-                    visible: (panelWindow.searchingText == "")
+                anchors {
+                    top: true
+                    bottom: true
+                    left: true
+                    right: true
                 }
-            }
+                property int barSize: Config.options.bar.vertical ? Appearance.sizes.verticalBarWidth : Appearance.sizes.barHeight
+                property int margin: isZoomInStyle ? barSize : barSize * 2
+                margins { 
+                    top: -margin * 2
+                    bottom: -margin * 2
+                    left: -margin * 2
+                    right: -margin * 2
+                }
+
+                HyprlandFocusGrab {
+                    id: grab
+                    windows: [root]
+                    property bool canBeActive: root.monitorIsFocused
+                    active: false
+                    onCleared: () => {
+                        if (!active)
+                            GlobalStates.overviewOpen = false;
+                    }
+                }
+
+                Connections {
+                    target: GlobalStates
+                    function onOverviewOpenChanged() {
+                        if (!GlobalStates.overviewOpen) {
+                            searchWidget.disableExpandAnimation();
+                            overviewScope.dontAutoCancelSearch = false;
+                        } else {
+                            if (!overviewScope.dontAutoCancelSearch) {
+                                searchWidget.cancelSearch();
+                            }
+                            delayedGrabTimer.start();
+                        }
+                    }
+                }
+
+                Keys.onPressed: event => {
+                    if (event.key === Qt.Key_Escape) {
+                        GlobalStates.overviewOpen = false;
+                    }
+                }
+
+                
+
+                Timer {
+                    id: delayedGrabTimer
+                    interval: Config.options.hacks.arbitraryRaceConditionDelay
+                    repeat: false
+                    onTriggered: {
+                        if (!grab.canBeActive)
+                            return;
+                        grab.active = GlobalStates.overviewOpen;
+                    }
+                }
+
+                Connections {
+                    target: overviewScope
+                    function onSetSearchingTextRequested(text) {
+                        root.setSearchingText(text);
+                    }
+                }
+
+
+                function setSearchingText(text) {
+                    searchWidget.setSearchingText(text);
+                    searchWidget.focusFirstItem();
+                }
+
+                Item {
+                    id: contentItem
+                    anchors.fill: parent
+
+                    MouseArea { // We could have used PanelWindow.mask to detect this, but this is more stable
+                        anchors.fill: parent
+                        onClicked: GlobalStates.overviewOpen = false;
+                    }
+
+                    Item { // Wrapper for animation 
+                        id: searchWidgetWrapper
+                        implicitHeight: searchWidget.implicitHeight
+                        implicitWidth: searchWidget.implicitWidth
+                        z: 999
+
+                        Keys.onPressed: event => {
+                            if (event.key === Qt.Key_Escape) {
+                                GlobalStates.overviewOpen = false;
+                            }
+                        }
+
+                        anchors {
+                            horizontalCenter: parent.horizontalCenter
+                            top: parent.top
+                            topMargin: root.margin * 2 + Appearance.sizes.elevationMargin
+                        }
+                        SearchWidget {
+                            id: searchWidget
+                            scale: root.effectiveScale
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            Synchronizer on searchingText {
+                                property alias source: root.searchingText
+                            }
+                        }
+                    }
+                    
+
+                    Loader { // Classic overview
+                        id: overviewLoader
+                        scale: root.effectiveScale
+                        anchors.top: searchWidgetWrapper.bottom
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        active: root.visible && (Config?.options.overview.enable ?? true) && !root.isScrollingLayout
+                        sourceComponent: OverviewWidget {
+                            panelWindow: root
+                            visible: (root.searchingText == "")
+                            monitorIndex: root.monitorIndex
+                        }
+                    }
+
+                    Loader { // Scrolling overview
+                        id: scrollingOverviewLoader
+                        scale: root.effectiveScale
+                        anchors.fill: parent
+                        active: root.visible && (Config?.options.overview.enable ?? true) && root.isScrollingLayout
+                        sourceComponent: ScrollingOverviewWidget {
+                            anchors.fill: parent
+                            panelWindow: root
+                            visible: (root.searchingText == "")
+                            monitorIndex: root.monitorIndex
+                        }
+                    }
+                }   
+            }   
         }
     }
+    
+    
 
     function toggleClipboard() {
         if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch) {
@@ -115,7 +227,7 @@ Scope {
             return;
         }
         overviewScope.dontAutoCancelSearch = true;
-        panelWindow.setSearchingText(Config.options.search.prefix.clipboard);
+        overviewScope.setSearchingTextRequested(Config.options.search.prefix.clipboard);
         GlobalStates.overviewOpen = true;
     }
 
@@ -125,7 +237,7 @@ Scope {
             return;
         }
         overviewScope.dontAutoCancelSearch = true;
-        panelWindow.setSearchingText(Config.options.search.prefix.emojis);
+        overviewScope.setSearchingTextRequested(Config.options.search.prefix.emojis);
         GlobalStates.overviewOpen = true;
     }
 

@@ -197,67 +197,114 @@ ContentPage {
         title: Translation.tr("Policies")
 
         ConfigRow {
+            Layout.fillHeight: false
 
-            // AI policy
-            ColumnLayout {
-                ContentSubsectionLabel {
-                    text: Translation.tr("AI")
+            ContentSubsection {
+                title: Translation.tr("AI")
+                Layout.fillWidth: true
+
+                ConfigSelectionArray {  
+                    currentValue: Config.options.policies.ai  
+                    onSelected: newValue => {  
+                        Config.options.policies.ai = newValue;  
+                    }  
+                    options: [  
+                        {  
+                            displayName: Translation.tr("No"),  
+                            icon: "close",  
+                            value: 0  
+                        },  
+                        {  
+                            displayName: Translation.tr("Yes"),  
+                            icon: "check",  
+                            value: 1  
+                        },  
+                        {  
+                            displayName: Translation.tr("Local only"),  
+                            icon: "sync_saved_locally",  
+                            value: 2  
+                        }  
+                    ]  
+                } 
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Weeb")
+                Layout.fillWidth: false
+
+                ConfigSelectionArray {  
+                    currentValue: Config.options.policies.weeb  
+                    onSelected: newValue => {  
+                        Config.options.policies.weeb = newValue;  
+                    }  
+                    options: [  
+                        {  
+                            displayName: Translation.tr("No"),  
+                            icon: "close",  
+                            value: 0  
+                        },  
+                        {  
+                            displayName: Translation.tr("Yes"),  
+                            icon: "check",  
+                            value: 1  
+                        },  
+                        {  
+                            displayName: Translation.tr("Closet"),  
+                            icon: "ev_shadow",  
+                            value: 2  
+                        }  
+                    ]  
                 }
+            }
+        }
+        ConfigRow {
+            Layout.fillHeight: false
 
-                ConfigSelectionArray {
-                    currentValue: Config.options.policies.ai
-                    onSelected: newValue => {
-                        Config.options.policies.ai = newValue;
-                    }
-                    options: [
-                        {
-                            displayName: Translation.tr("No"),
-                            icon: "close",
-                            value: 0
-                        },
-                        {
-                            displayName: Translation.tr("Yes"),
-                            icon: "check",
-                            value: 1
-                        },
-                        {
-                            displayName: Translation.tr("Local only"),
-                            icon: "sync_saved_locally",
-                            value: 2
-                        }
-                    ]
+            ContentSubsection {
+                title: Translation.tr("Wallpaper browser")
+                Layout.fillWidth: true
+
+                ConfigSelectionArray {  
+                    currentValue: Config.options.policies.wallpapers  
+                    onSelected: newValue => {  
+                        Config.options.policies.wallpapers = newValue;  
+                    }  
+                    options: [  
+                        {  
+                            displayName: Translation.tr("No"),  
+                            icon: "close",  
+                            value: 0  
+                        },  
+                        {  
+                            displayName: Translation.tr("Yes"),  
+                            icon: "check",  
+                            value: 1  
+                        }  
+                    ]  
                 }
             }
 
-            // Weeb policy
-            ColumnLayout {
+            ContentSubsection {
+                title: Translation.tr("Translator")
+                Layout.fillWidth: false
 
-                ContentSubsectionLabel {
-                    text: Translation.tr("Weeb")
-                }
-
-                ConfigSelectionArray {
-                    currentValue: Config.options.policies.weeb
-                    onSelected: newValue => {
-                        Config.options.policies.weeb = newValue;
-                    }
-                    options: [
-                        {
-                            displayName: Translation.tr("No"),
-                            icon: "close",
-                            value: 0
-                        },
-                        {
-                            displayName: Translation.tr("Yes"),
-                            icon: "check",
-                            value: 1
-                        },
-                        {
-                            displayName: Translation.tr("Closet"),
-                            icon: "ev_shadow",
-                            value: 2
-                        }
-                    ]
+                ConfigSelectionArray {  
+                    currentValue: Config.options.policies.translator  
+                    onSelected: newValue => {  
+                        Config.options.policies.translator = newValue;  
+                    }  
+                    options: [  
+                        {  
+                            displayName: Translation.tr("No"),  
+                            icon: "close",  
+                            value: 0  
+                        },  
+                        {  
+                            displayName: Translation.tr("Yes"),  
+                            icon: "check",  
+                            value: 1  
+                        }  
+                    ]  
                 }
             }
         }

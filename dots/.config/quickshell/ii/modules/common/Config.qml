@@ -84,6 +84,8 @@ Singleton {
             property JsonObject policies: JsonObject {
                 property int ai: 1 // 0: No | 1: Yes | 2: Local
                 property int weeb: 1 // 0: No | 1: Open | 2: Closet
+                property int wallpapers: 1 // 0: No | 1: Yes  
+                property int translator: 0 // 0: No | 1: Yes
             }
 
             property JsonObject ai: JsonObject {
@@ -607,14 +609,22 @@ Singleton {
             property JsonObject overview: JsonObject {
                 property bool enable: true
                 property real scale: 0.18 // Relative to screen size
-                property real rows: 2
-                property real columns: 5
+                property real rows: 3
+                property real columns: 1
                 property bool orderRightLeft: false
                 property bool orderBottomUp: false
+                property bool showIcons: true
                 property bool centerIcons: true
-                property bool showOnlyOnFocusedMonitor: false
-                property string position: "center" // Options: top, center, bottom
-                property int centerTopPaddingRatio: 3
+                property bool useWorkspaceMap: true
+                property list<var> workspaceMap: [0,10]
+                property bool showOpeningAnimation: true
+
+                property JsonObject scrollingStyle: JsonObject {
+                    
+                    property int dimPercentage: 50 // 0-75
+                    property string backgroundStyle: "blur" // Options: transparent, blur, dim
+                    property string zoomStyle: "in"         // Options: in, out
+                }
             }
 
             property JsonObject regionSelector: JsonObject {
@@ -797,6 +807,16 @@ Singleton {
                     property list<string> networkNameKeywords: ["airport", "cafe", "college", "company", "eduroam", "free", "guest", "public", "school", "university"]
                     property list<string> fileKeywords: ["anime", "booru", "ecchi", "hentai", "yande.re", "konachan", "breast", "nipples", "pussy", "nsfw", "spoiler", "girl"]
                     property list<string> linkKeywords: ["hentai", "porn", "sukebei", "hitomi.la", "rule34", "gelbooru", "fanbox", "dlsite"]
+                }
+            }
+
+            property JsonObject wallpapers: JsonObject {  
+                property string service: "wallhaven" // "unsplash" or "wallhaven"  
+                property string sort: "favourites"
+                property bool showAnimeResults: false // only for wallhaven service
+                property JsonObject paths: JsonObject {
+                    property string download: FileUtils.trimFileProtocol(`${Directories.home}/Pictures/Wallpapers`)
+                    property string nsfw: FileUtils.trimFileProtocol(`${Directories.home}/Pictures/Wallpapers/NSFW`)
                 }
             }
 

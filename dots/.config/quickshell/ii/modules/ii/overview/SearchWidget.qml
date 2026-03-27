@@ -1,24 +1,29 @@
+pragma ComponentBehavior: Bound
+
+import Qt.labs.synchronizer
+import Qt5Compat.GraphicalEffects
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+
 import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
-import Qt.labs.synchronizer
-import Qt5Compat.GraphicalEffects
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
-import Quickshell
-import Quickshell.Io
 
 Item { // Wrapper
     id: root
+
     readonly property string xdgConfigHome: Directories.config
+    readonly property int typingDebounceInterval: 200
+    readonly property int typingResultLimit: 15 // Should be enough to cover the whole view
+
+    readonly property bool sharpMode: Config.options.appearance.sharpMode
     property string searchingText: LauncherSearch.query
     property bool showResults: searchingText != ""
-    property string overviewPosition: Config.options.overview.position
     implicitWidth: searchWidgetContent.implicitWidth + Appearance.sizes.elevationMargin * 2
-    implicitHeight: searchBar.implicitHeight + searchBar.verticalPadding * 2 + Appearance.sizes.elevationMargin * 2
+    implicitHeight: searchWidgetContent.implicitHeight + searchBar.verticalPadding * 2 + Appearance.sizes.elevationMargin * 2
 
     function focusFirstItem() {
         appResults.currentIndex = 0;
@@ -96,32 +101,13 @@ Item { // Wrapper
     StyledRectangularShadow {
         target: searchWidgetContent
     }
+
     Rectangle { // Background
         id: searchWidgetContent
-        anchors {
-            top: parent.top
-            horizontalCenter: parent.horizontalCenter
-            topMargin: Appearance.sizes.elevationMargin
-            bottomMargin: Appearance.sizes.elevationMargin
-        }
-        state: root.overviewPosition === "center" ? "top" : root.overviewPosition
-        states: [
-            State {
-                name: "top"
-                AnchorChanges { target: searchWidgetContent; anchors.top: parent.top; anchors.bottom: undefined; }
-                AnchorChanges { target: gridLayout; anchors.top: parent.top; anchors.bottom: undefined; }
-            },
-            State {
-                name: "bottom"
-                AnchorChanges { target: searchWidgetContent; anchors.top: undefined; anchors.bottom: parent.bottom; }
-                AnchorChanges { target: gridLayout; anchors.top: undefined; anchors.bottom: parent.bottom; }
-            }
-        ]
-        
         clip: true
         implicitWidth: gridLayout.implicitWidth
         implicitHeight: gridLayout.implicitHeight
-        radius: searchBar.height / 2 + searchBar.verticalPadding
+        radius: Config.options.appearance.sharpMode ? 0 : searchBar.height / 2 + searchBar.verticalPadding
         color: Appearance.colors.colLayer0
 
         Behavior on implicitHeight {
@@ -134,20 +120,6 @@ Item { // Wrapper
             id: gridLayout
             anchors.horizontalCenter: parent.horizontalCenter
             columns: 1
-
-            state: Config.options.overview.position === "center" ? "top" : Config.options.overview.position
-            states: [
-                State {
-                    name: "top"
-                    AnchorChanges { target: searchWidgetContent; anchors.top: parent.top; anchors.bottom: undefined; }
-                    AnchorChanges { target: gridLayout; anchors.top: parent.top; anchors.bottom: undefined; }
-                },
-                State {
-                    name: "bottom"
-                    AnchorChanges { target: searchWidgetContent; anchors.top: undefined; anchors.bottom: parent.bottom; }
-                    AnchorChanges { target: gridLayout; anchors.top: undefined; anchors.bottom: parent.bottom; }
-                }
-            ]
 
             // clip: true
             layer.enabled: true
@@ -167,7 +139,6 @@ Item { // Wrapper
                 Layout.rightMargin: 4
                 Layout.topMargin: verticalPadding
                 Layout.bottomMargin: verticalPadding
-                Layout.row: root.overviewPosition == "bottom" ? 2 : 0
                 Synchronizer on searchingText {
                     property alias source: root.searchingText
                 }
@@ -193,7 +164,6 @@ Item { // Wrapper
                 spacing: 2
                 KeyNavigation.up: searchBar
                 highlightMoveDuration: 100
-                Layout.row: root.overviewPosition == "bottom" ? 0 : 2
 
                 onFocusChanged: {
                     if (focus)
@@ -208,30 +178,48 @@ Item { // Wrapper
                     }
                 }
 
-                model: ScriptModel {
-                    id: model
-                    objectProp: "key"
-                    values: LauncherSearch.results
-                    onValuesChanged: {
-                        root.focusFirstItem();
+                Timer {
+                    id: debounceTimer
+                    interval: root.typingDebounceInterval
+                    onTriggered: {
+                        resultModel.values = LauncherSearch.results ?? [];
                     }
                 }
 
+                Connections {
+                    target: LauncherSearch
+                    function onResultsChanged() {
+                        resultModel.values = LauncherSearch.results.slice(0, root.typingResultLimit);
+                        root.focusFirstItem();
+                        debounceTimer.restart();
+                    }
+                }
+
+                model: ScriptModel {
+                    id: resultModel
+                    objectProp: "key"
+                }
+
                 delegate: SearchItem {
+                    id: searchItem
                     // The selectable item for each search result
                     required property var modelData
                     anchors.left: parent?.left
                     anchors.right: parent?.right
                     entry: modelData
-                    query: StringUtils.cleanOnePrefix(root.searchingText, [
-                        Config.options.search.prefix.action,
-                        Config.options.search.prefix.app,
-                        Config.options.search.prefix.clipboard,
-                        Config.options.search.prefix.emojis,
-                        Config.options.search.prefix.math,
-                        Config.options.search.prefix.shellCommand,
-                        Config.options.search.prefix.webSearch
-                    ])
+                    query: StringUtils.cleanOnePrefix(root.searchingText, [Config.options.search.prefix.action, Config.options.search.prefix.app, Config.options.search.prefix.clipboard, Config.options.search.prefix.emojis, Config.options.search.prefix.math, Config.options.search.prefix.shellCommand, Config.options.search.prefix.webSearch])
+
+                    Keys.onPressed: event => {
+                        if (event.key === Qt.Key_Tab) {
+                            if (LauncherSearch.results.length === 0)
+                                return;
+                            const tabbedText = searchItem.modelData.name;
+                            LauncherSearch.query = tabbedText;
+                            searchBar.searchInput.text = tabbedText;
+                            event.accepted = true;
+                            root.focusSearchInput();
+                        }
+                    }
                 }
             }
         }

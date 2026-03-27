@@ -12,8 +12,7 @@ MouseArea {
 
     property bool activelyRecording: Persistent.states.screenRecord.active
 
-    property color colBackground: Appearance.colors.colPrimary
-    property color colText: Appearance.colors.colOnPrimary
+    property color colText: Appearance.colors.colPrimary
 
     hoverEnabled: true
     implicitWidth: vertical ? 20 : 80 // we have to enter a fixed size to make it dull 
