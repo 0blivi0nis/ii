@@ -77,12 +77,7 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: 100
             radius: Appearance.rounding.large
-            color: Qt.rgba(
-                Appearance.colors.colLayer1.r,
-                Appearance.colors.colLayer1.g,
-                Appearance.colors.colLayer1.b,
-                0.3
-            )
+            color: "transparent"
             RowLayout {
                 id: deviceSelectorRowLayout
                 uniformCellSizes: true
