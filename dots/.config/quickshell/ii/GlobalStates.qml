@@ -30,6 +30,7 @@ Singleton {
     property bool wallpaperSelectorOpen: false
     property bool workspaceShowNumbers: false
     property bool displayModeOpen: false
+    property bool isScrollingLayout: false
 
     onSidebarRightOpenChanged: {
         if (GlobalStates.sidebarRightOpen) {
@@ -47,6 +48,18 @@ Singleton {
         }
         onReleased: {
             root.superDown = false
+        }
+    }
+
+    // NOTE: FileView may be a better approach but it has it's own disadvantages
+    Process {
+        running: true
+        command: [ "bash", "-c", `hyprctl getoption general:layout | grep "str:" | awk '{print $2}'`]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                // console.log("Got layout:", this.text, "layout is scrolling : ", this.text.trim() == "scrolling")
+                GlobalStates.isScrollingLayout = this.text.trim() == "scrolling"
+            }
         }
     }
 }
